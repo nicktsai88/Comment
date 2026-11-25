@@ -12,10 +12,10 @@
 </head>
 <body>
 <header class="top"><div class="shell top-inner"><div class="brand"><span class="seal" aria-hidden="true">囍</span>囍事快剪</div><div class="top-actions" id="top-actions" hidden><button class="ghost" id="connect-toggle" type="button" aria-controls="connect-panel" aria-expanded="false">商家連線</button><button class="ghost" id="logout" type="button">登出</button></div></div></header>
-<main id="login-view" class="login-layout"><section class="login-panel"><h1>登入評論管理室</h1><form id="login" class="stack"><label>管理帳號<input class="field" name="username" id="username" autocomplete="username" autocapitalize="off" spellcheck="false" required></label><label>密碼<input class="field" type="password" id="password" name="password" autocomplete="current-password" required></label><button class="primary" id="login-submit" type="submit">登入</button><div class="alert" id="login-status" role="status"></div></form><a class="fallback" id="login-fallback" hidden>開啟管理後台</a></section></main>
+<main id="login-view" class="login-layout"><section class="login-panel"><h1>登入評論管理室</h1><form id="login" class="stack"><label>管理帳號<input class="field" name="username" id="username" autocomplete="username" autocapitalize="off" spellcheck="false" required></label><label>密碼<input class="field" type="password" id="password" name="password" autocomplete="current-password" required></label><button class="primary" id="login-submit" type="submit">登入</button><div class="alert" id="login-status" role="status"></div></form><a class="fallback" id="login-fallback" hidden>直接開啟私有管理後台</a></section></main>
 <main class="shell app-main" id="app" hidden><div class="toolbar"><div><h1>Google 評論管理室</h1><p class="meta" id="summary" aria-live="polite"></p></div><button id="refresh" type="button" class="secondary">重新整理</button></div>
-<div class="alert app-status" id="global-status" role="status"></div><div class="notice app-status" id="sync-warning" role="status" hidden></div><a class="fallback" id="app-fallback" hidden>開啟管理後台</a>
-<section id="connect-panel" class="connect" hidden><h2>Google 商家連線</h2><p id="connect-description"></p><button type="button" class="primary" id="authorize">連結 Windsor.ai</button><details id="alternative-key"><summary>改用 API 金鑰</summary><form id="connect-form" class="field-group"><label>Windsor.ai API 金鑰<input id="key" type="password" class="field" autocomplete="off" spellcheck="false" required></label><button id="connect-save" type="submit" class="secondary">儲存連線</button></form></details><div class="alert" id="connect-status" role="status"></div></section>
+<div class="alert app-status" id="global-status" role="status"></div><div class="notice app-status" id="sync-warning" role="status" hidden></div><div class="buttons" id="relay-controls" hidden><button id="relay-open" type="button" class="secondary">連接管理後台</button><a class="fallback" id="app-fallback" hidden>直接開啟私有管理後台</a></div>
+<section id="connect-panel" class="connect" hidden><h2>Google 商家連線</h2><p id="connect-description"></p><button type="button" class="primary" id="authorize">連結 Windsor.ai</button><a class="fallback" id="oauth-link" target="_blank" rel="noopener noreferrer" hidden>前往 Windsor.ai 完成授權</a><details id="alternative-key"><summary>改用 API 金鑰</summary><form id="connect-form" class="field-group"><label>Windsor.ai API 金鑰<input id="key" type="password" class="field" autocomplete="off" spellcheck="false" required></label><button id="connect-save" type="submit" class="secondary">儲存連線</button></form></details><div class="alert" id="connect-status" role="status"></div></section>
 <nav id="tabs" class="tabs" aria-label="回覆狀態"></nav>
 <div class="workspace"><section class="panel" id="inbox"><div class="list-head"><h2>評論清單</h2><label class="search">搜尋評論<input id="search" class="field" type="search" placeholder="輸入顧客、分店或留言關鍵字"></label><div class="filter-pair"><label>分店<select class="control" id="branch"></select></label><label>星等<select class="control" id="stars"><option value="">全部星等</option><option value="1">1 星</option><option value="2">2 星</option><option value="3">3 星</option><option value="4">4 星</option><option value="5">5 星</option></select></label></div></div><div class="list" id="list" aria-label="篩選結果"></div></section>
 <section class="panel reader" id="reader" aria-labelledby="reader-heading"><div id="no-review" class="empty">請從清單選取一則評論。</div><div id="detail" hidden><header class="detail-head"><div class="detail-top"><span id="detail-stars" class="pill"></span><span id="detail-state" class="pill"></span><span id="detail-date" class="meta"></span><button id="back" class="mobile-back secondary" type="button">回到清單</button></div><h2 id="reader-heading"></h2><p id="reviewer" class="meta"></p></header><div class="body-detail"><section class="original"><h3>顧客原文</h3><div class="message" id="comment"></div></section>
@@ -40,6 +40,8 @@ function endpoint(value) {
 }
 const origin = endpoint(conf.api);
 const backendLink = endpoint(conf.backend);
+const privateOrigin=origin ? new URL(origin).origin : '';
+const needsRelay=Boolean(privateOrigin && privateOrigin!==location.origin);
 const storageKey = 'xishi-review-session:' + (origin || location.origin);
 let token = '';
 try { token = sessionStorage.getItem(storageKey) || ''; } catch {}
@@ -53,14 +55,89 @@ const stampFormat = new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',year
 class ApiError extends Error {
   constructor(message,status=0){super(message);this.status=status;}
 }
+const bridgeProtocol='xishi-comment-bridge/1';
+const bridgeNonce=()=>Array.from(crypto.getRandomValues(new Uint8Array(16)),n=>n.toString(16).padStart(2,'0')).join('');
+let bridgeWindow=null, bridgePort=null, channel='', connectAttempt=null;
+const waiting=new Map();
+function bridgeClosed() {
+  if(!bridgeWindow)return true;
+  try{return bridgeWindow.closed;}catch{return false;}
+}
+function bridgeLive(){return Boolean(bridgePort && !bridgeClosed());}
+function disconnectRelay(){
+  if(bridgePort)bridgePort.close();
+  bridgePort=null;
+  for(const req of waiting.values()){clearTimeout(req.timer);req.reject(new ApiError('連線已中斷，尚未取得後台結果。'));}
+  waiting.clear();
+  if(needsRelay && token)$('relay-controls').hidden=false;
+}
+function connectRelay(){
+  if(!needsRelay||bridgeLive())return Promise.resolve();
+  if(connectAttempt)return connectAttempt;
+  disconnectRelay();
+  const nonce=bridgeNonce();channel=nonce;
+  // Called synchronously by the login or reconnect click so browsers may open a private top-level window.
+  const popup=window.open(privateOrigin+'/bridge','xishi_comment_'+nonce);
+  if(!popup){backendFallback(true);return Promise.reject(new ApiError('瀏覽器封鎖了連線視窗。請允許彈出式視窗，或直接開啟私有管理後台。',-1));}
+  bridgeWindow=popup;
+  let resolveAttempt,rejectAttempt;
+  connectAttempt=new Promise((resolve,reject)=>{resolveAttempt=resolve;rejectAttempt=reject;});
+  const pendingConnection=connectAttempt;
+  let candidate=null;
+  function cleanup(){clearInterval(poll);clearTimeout(limit);window.removeEventListener('message',onAvailable);connectAttempt=null;}
+  function fail(reason){
+    cleanup();if(candidate)candidate.close();backendFallback(true);rejectAttempt(new ApiError(reason,-1));
+  }
+  function onAvailable(event){
+    const m=event.data;
+    if(event.origin!==privateOrigin||event.source!==popup||!m||m.protocol!==bridgeProtocol||m.type!=='available'||m.channel!==nonce||candidate)return;
+    const ports=new MessageChannel();candidate=ports.port1;
+    candidate.onmessage=evt=>{
+      const m=evt.data;
+      if(!m||m.protocol!==bridgeProtocol||m.channel!==nonce)return;
+      if(m.type==='bound'&&!bridgePort){
+        bridgePort=candidate;cleanup();backendFallback(false);resolveAttempt();return;
+      }
+      if(m.type!=='result'||!bridgePort || !Number.isInteger(m.status))return;
+      const req=waiting.get(m.id);if(!req)return;
+      waiting.delete(m.id);clearTimeout(req.timer);req.resolve({status:m.status,data:m.data});
+    };
+    candidate.onmessageerror=()=>{if(bridgePort===candidate){disconnectRelay();backendFallback(true);}};
+    candidate.start();
+    try{popup.postMessage({protocol:bridgeProtocol,type:'bind',channel:nonce},privateOrigin,[ports.port2]);}
+    catch{fail('未能建立安全連線，請使用私有管理後台。');}
+  }
+  window.addEventListener('message',onAvailable);
+  function probe(){
+    if(bridgeClosed()){fail('連線視窗已關閉，或瀏覽器隔離了頁面。請重新連接，或直接開啟私有管理後台。');return;}
+    if(!candidate)try{popup.postMessage({protocol:bridgeProtocol,type:'probe',channel:nonce},privateOrigin);}catch{}
+  }
+  const poll=setInterval(probe,500);
+  const limit=setTimeout(()=>fail('連線等候逾時。請完成私有後台登入後再試，或直接開啟私有管理後台。'),120000);
+  return pendingConnection;
+}
+function relayRequest(path,method,body){
+  if(!bridgeLive()){
+    disconnectRelay();backendFallback(true);
+    return Promise.reject(new ApiError('請點「連接管理後台」並在新視窗完成登入，再回來繼續。',-1));
+  }
+  const id=bridgeNonce();
+  return new Promise((resolve,reject)=>{
+    const timer=setTimeout(()=>{waiting.delete(id);backendFallback(true);reject(new ApiError('未收到操作結果。若剛才正在發布，請先核對結果。'));},98000);
+    waiting.set(id,{timer,resolve,reject});
+    try{bridgePort.postMessage({protocol:bridgeProtocol,type:'request',channel,id,path,method,body,token:token||''});}
+    catch{clearTimeout(timer);waiting.delete(id);disconnectRelay();backendFallback(true);reject(new ApiError('連線失效，請重新連接管理後台。'));}
+  });
+}
 function setMessage(element, message='', error=false) {
   element.textContent = message;
   element.classList.toggle('error',error);
 }
 function backendFallback(show) {
+  $('relay-controls').hidden=!(needsRelay && token && (show || !bridgeLive()));
   for (const id of ['login-fallback','app-fallback']) {
-    const link=$(id); link.hidden=!(show && backendLink && new URL(backendLink).origin!==location.origin);
-    if(!link.hidden){link.href=backendLink;link.rel='noreferrer';}
+    const link=$(id); link.hidden=!((show || needsRelay && !bridgeLive()) && backendLink && new URL(backendLink).origin!==location.origin);
+    if(!link.hidden){link.href=backendLink;link.rel='noopener noreferrer';link.target='_blank';}
   }
 }
 function storeToken(value) {
@@ -74,27 +151,35 @@ function loginScreen(message='') {
   $('login-view').hidden=false;$('app').hidden=true;$('top-actions').hidden=true;
   $('connect-panel').hidden=true;$('key').value='';$('draft').value='';$('password').value='';
   $('list').replaceChildren(); $('detail').hidden=true;
+  backendFallback(false);$('oauth-link').hidden=true;
   setMessage($('login-status'),message,Boolean(message));
   setMessage($('global-status'));setMessage($('connect-status'));$('sync-warning').hidden=true;$('sync-warning').textContent='';
 }
 async function api(path, method='GET', body) {
   const requestSession=session;
-  const headers={'Accept':'application/json'};
-  if(token)headers.Authorization='Bearer '+token;
-  if(body!==undefined)headers['Content-Type']='application/json';
-  let response;
-  try {
-    response=await fetch(origin+path,{method,headers,cache:'no-store',credentials:!origin||origin===location.origin?'same-origin':'omit',redirect:'error',body:body===undefined?undefined:JSON.stringify(body)});
-  } catch { backendFallback(true); throw new ApiError('目前連不到管理服務，請確認網路後再試。'); }
-  const data=await response.json().catch(()=>null);
+  let status,data;
+  if(needsRelay) {
+    ({status,data}=await relayRequest(path,method,body));
+  } else {
+    const headers={'Accept':'application/json'};
+    if(token)headers.Authorization='Bearer '+token;
+    if(body!==undefined)headers['Content-Type']='application/json';
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),93000);
+    try {
+      const response=await fetch(origin+path,{method,headers,cache:'no-store',credentials:'same-origin',redirect:'error',signal:controller.signal,body:body===undefined?undefined:JSON.stringify(body)});
+      status=response.status;data=await response.json().catch(()=>null);
+    } catch {backendFallback(true);throw new ApiError('目前未收到管理服務回應。若剛才正在發布，請先核對結果。');}
+    finally{clearTimeout(timeout);}
+  }
   if(requestSession!==session) throw new ApiError('登入狀態已變更。',401);
-  if(response.status===401 && path!=='/api/login' && ['請先登入。','登入時間已到，請重新登入。'].includes(data?.error) && !response.ok){
+  if(status===401 && ['請先登入。','登入時間已到，請重新登入。'].includes(data?.error)){
     loginScreen('登入已逾時，請重新登入。');
     throw new ApiError('登入已逾時，請重新登入。',401);
   }
-  if(!data || !response.ok || data.error){
+  if(!data || status<200 || status>=300 || data.error){
     if(!data) backendFallback(true);
-    throw new ApiError(typeof data?.error==='string'?data.error:'服務暫時無法完成要求。',response.status);
+    throw new ApiError(typeof data?.error==='string'?data.error:'服務暫時無法完成要求。',status);
   }
   backendFallback(false);return data;
 }
@@ -229,6 +314,10 @@ $('login').addEventListener('submit',async event=>{
   if(!username||!password)return;
   $('login-submit').disabled=true;setMessage($('login-status'),'正在登入…');
   try{
+    if(needsRelay){
+      setMessage($('login-status'),'請在新視窗完成私有後台登入，然後切回本頁。');
+      await connectRelay();
+    }
     const response=await api('/api/login','POST',{username,password});
     if(typeof response.token!=='string'||!response.token)throw new ApiError('沒有取得登入憑證。');
     session++;storeToken(response.token);$('password').value='';enter();
@@ -242,10 +331,22 @@ $('logout').addEventListener('click',async()=>{
   catch(err){if(token)setMessage($('global-status'),'登出未完成。'+err.message,true);}
   finally{$('logout').disabled=false;}
 });
+$('relay-open').onclick=async()=>{
+  try{
+    setMessage($('global-status'),'請在新視窗完成私有後台登入，然後切回本頁。');
+    await connectRelay();await load();
+  }catch(err){setMessage($('global-status'),err.message,true);}
+};
 $('connect-toggle').onclick=()=>{$('connect-panel').hidden=!$('connect-panel').hidden;setConnections();if(!$('connect-panel').hidden)$('authorize').focus();};
 $('authorize').onclick=async()=>{
   if(connectionBusy)return;
   connectionBusy=true;setConnections();setMessage($('connect-status'),'正在開啟授權頁面…');
+  let authPopup=null;
+  if(needsRelay && bridgeLive()){
+    authPopup=window.open('about:blank','_blank');
+    if(authPopup)authPopup.opener=null;
+  }
+  $('oauth-link').hidden=true;
   try{
     const data=await api('/api/authorize','POST',{});
     const destination=new URL(data.url);
@@ -253,8 +354,12 @@ $('authorize').onclick=async()=>{
     if(destination.protocol!=='https:' || destination.username || destination.password || !(sameBackend||destination.hostname==='windsor.ai'||destination.hostname.endsWith('.windsor.ai'))){
       throw new ApiError('無法確認授權目的地，請稍後重試。');
     }
-    window.location.assign(destination.href);
-  }catch(err){if(token)setMessage($('connect-status'),err.message,true);}
+    if(needsRelay){
+      const link=$('oauth-link');link.href=destination.href;link.hidden=false;
+      if(authPopup){authPopup.location.replace(destination.href);link.hidden=true;}
+      setMessage($('connect-status'),authPopup?'請在新分頁完成授權，再回這一頁按「重新整理」。':'請點「前往 Windsor.ai 完成授權」，完成後回這一頁重新整理。');
+    }else{window.location.assign(destination.href);}
+  }catch(err){if(authPopup)try{authPopup.close();}catch{};if(token)setMessage($('connect-status'),err.message,true);}
   finally{connectionBusy=false;setConnections();}
 };
 $('connect-form').addEventListener('submit',async e=>{
@@ -320,6 +425,6 @@ async function mutate(mode) {
 }
 $('save').onclick=()=>mutate('save');$('publish').onclick=()=>mutate('publish');$('recheck').onclick=()=>mutate('recheck');
 window.addEventListener('beforeunload',e=>{if(drafts.size){e.preventDefault();e.returnValue='';}});
-if(token)enter();else{$('username').focus();}
+if(token)enter();else{backendFallback(false);$('username').focus();}
 </script>
 </body></html>
