@@ -462,26 +462,100 @@ async function mutate(mode) {
 function canShareReview(row){
   return Boolean(row && usedState(row)==='posted' && row.reply.trim() && !busy.has(row.id));
 }
-function reviewNotice(row){
-  return ['【囍事快剪｜'+row.branch+'】Google 評論 · '+row.stars+' 星',
-    '顧客評論\n'+(row.comment||'（顧客僅留下星等）'),
-    '店家回覆\n'+row.reply].join('\n\n');
+// Public Maps CIDs from the Business Profile listings. Keep them as strings.
+const branchMapIds=Object.freeze({
+  '斗六一店':'11242048295583417870',
+  '後昌店':'17373969206578390497',
+  '小港店':'270544133879903032',
+  '陽明店':'4374185542988245252',
+  '內惟店':'7635620459557777744',
+  '光遠店':'4651807035987265899',
+  '十全店':'12569275338904857488',
+  '大社店':'16520884951693729415',
+  '德惠店':'1857343343308808563',
+  '福山店':'16252485606887017781',
+  '虎尾店':'7499146427208007390',
+  '華榮店':'17671593067079595578',
+  '瑞隆店':'3654843463676804309',
+  '大昌店':'17616396131142929978',
+  '斗六二店':'3165399279000577994',
+  '五甲店':'3679753078961869',
+  '鼎中店':'17992378819725890606',
+  '復興店':'10254667583150151',
+  '明誠店':'17901843289301738956',
+  '武廟店':'4431814632879686179',
+  '一心店':'10025081811103873314',
+  '左營店':'17457473830611182225',
+  '大寮店':'12233522644658768752',
+  '華夏店':'6120942922636503314',
+  '自由店':'13094168347138866701',
+  '建興店':'1388943889979863193'
+});
+const officialLineURL='https://lin.ee/9nRsU3Q';
+const standardContact=/^囍事快剪官方[ \t　]*LINE[ \t　]*https:\/\/lin\.ee\/9nRsU3Q[ \t　]*\n也可在[ \t　]*LINE[ \t　]*選「加入好友」[ \t　]*→[ \t　]*「搜尋」[ \t　]*→[ \t　]*「電話號碼」，輸入[ \t　]*0988-225559。[ \t　]*\n公司客服電話[ \t　]*0988-225559[ \t　]*$/m;
+function noticeParagraphs(text){
+  return text.trim().replace(/\r\n?/g,'\n').split(/\n{2,}/u).map(paragraph=>
+    paragraph.split('\n').map(line=>{
+      if(line.length<90)return line;
+      let start=0;
+      return line.replace(/[。！？][」』”）]*|[.!?](?=\s)|[，；]/gu,(end,pos)=>{
+        const next=pos+end.length;
+        const target=/[，；]/u.test(end)?88:48;
+        if(next-start<target || line.length-next<16)return end;
+        start=next;
+        return end+'\n\n';
+      });
+    }).join('\n')
+  ).join('\n\n');
 }
-function personalShareURL(row,text){
+function reviewNotice(row,desktop=false){
+  const reply=row.reply.replace(/\r\n?/g,'\n').trim();
+  const hasContact=standardContact.test(reply);
+  const body=reply.replace(standardContact,'').trim();
+  const sections=[row.branch+'｜Google 評論　'+row.stars+' 星',
+    '── 顧客評論 ──\n'+(row.comment.trim()?noticeParagraphs(row.comment):'（僅留下星等）')];
+  // Identify an App paragraph only when both store names occur on the same line.
+  const appLine=/^(?=[^\n]*App Store)(?=[^\n]*Google Play)[^\n]+$/im.exec(body);
+  let appStart=appLine?.index ?? -1;
+  if(appLine){
+    const firstStore=appLine[0].search(/App Store|Google Play/i);
+    const beforeStore=appLine[0].slice(0,firstStore);
+    const lastStop=Math.max(beforeStore.lastIndexOf('。'),beforeStore.lastIndexOf('！'),beforeStore.lastIndexOf('？'));
+    if(lastStop>=0)appStart+=lastStop+1;
+  }
+  const main=appStart<0?body:body.slice(0,appStart).trim();
+  sections.push('── 店家回覆 ──'+(main?'\n'+noticeParagraphs(main):''));
+  if(appLine){
+    const end=appLine.index+appLine[0].length;
+    sections.push('── App 資訊 ──\n'+noticeParagraphs(body.slice(appStart,end)));
+    const rest=body.slice(end).trim();
+    if(rest)sections.push('── 回覆補充 ──\n'+noticeParagraphs(rest));
+  }
+  let shareLink='';
+  if(hasContact){
+    // On desktop LINE appends the supplied link. Give it the existing contact link once.
+    sections.push('── 聯絡方式 ──\n客服電話　0988-225559\n用此號碼加 LINE 好友\n「加入好友」→「搜尋」→「電話號碼」\n官方 LINE'+(desktop?'':'　'+officialLineURL));
+    if(desktop)shareLink=officialLineURL;
+  }else if(desktop && Object.hasOwn(branchMapIds,row.branch)){
+    shareLink='https://maps.google.com/maps?cid='+branchMapIds[row.branch];
+    sections.push('分店地圖');
+  }
+  return {text:sections.join('\n\n'),shareLink};
+}
+function personalShareURL(row){
   const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
     (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
-  if(mobile)return 'https://line.me/R/share?text='+encodeURIComponent(text);
-  // LINE's desktop web share accepts a public URL together with the notification.
-  const map=new URL('https://www.google.com/maps/search/');
-  map.searchParams.set('api','1');map.searchParams.set('query','囍事快剪 '+row.branch);
-  return 'https://social-plugins.line.me/lineit/share?url='+encodeURIComponent(map.href)+'&text='+encodeURIComponent(text);
+  const notice=reviewNotice(row,!mobile);
+  if(mobile)return 'https://line.me/R/share?text='+encodeURIComponent(notice.text);
+  if(!notice.shareLink)return '';
+  return 'https://social-plugins.line.me/lineit/share?url='+encodeURIComponent(notice.shareLink)+'&text='+encodeURIComponent(notice.text);
 }
 function manualCopy(row,text){
   const field=$('share-manual');field.hidden=false;field.value=text;field.focus();field.select();
   $('share-feedback').textContent='請複製下方完整通知，再貼到「'+row.branch+'」的 LINE 群組。';
 }
 async function copyNotice(row){
-  const text=reviewNotice(row);
+  const {text}=reviewNotice(row);
   try{
     await navigator.clipboard.writeText(text);
     if(active===row.id && token)$('share-feedback').textContent='已複製通知，請在個人 LINE 選擇「'+row.branch+'」群組後貼上。';
@@ -491,9 +565,9 @@ async function copyNotice(row){
 }
 $('share-line').onclick=()=>{
   const row=reviews.get(active);if(!canShareReview(row))return;
-  const text=reviewNotice(row),url=personalShareURL(row,text);
+  const url=personalShareURL(row);
   // Some browsers or LINE reject long request URLs. Preserve every character via clipboard.
-  if(url.length>8000){copyNotice(row);return;}
+  if(!url || url.length>8000){copyNotice(row);return;}
   window.open(url,'_blank','noopener,noreferrer');
   $('share-feedback').textContent='請在 LINE 選擇「'+row.branch+'」群組並送出。若分享視窗未開啟，可使用「複製通知」。';
 };
