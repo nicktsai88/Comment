@@ -291,7 +291,7 @@ function renderDetail() {
   $('publish').disabled=running||!connected||!draftFor(r).trim()||Boolean(local?.conflict);
   $('recheck').disabled=running;$('draft-state').textContent=posted?'':running?'處理中…':local?.conflict?'請選擇草稿版本':local?'尚未儲存':'';
   $('line-state').hidden=!posted||!r.lineStatus;
-  $('line-text').textContent=r.lineStatus==='sent'?'LINE 已受理陽明店通知':'陽明店 LINE 通知待處理';
+  $('line-text').textContent=r.lineStatus==='sent'?'LINE 已受理'+r.branch+'通知':r.branch+' LINE 通知待處理';
   $('line-retry').hidden=r.lineStatus!=='ready';$('line-retry').disabled=running;
   const issue=issues.get(r.id);
   setMessage($('detail-status'),issue?.message||'',issue?.error||false);
