@@ -21,6 +21,9 @@
 #share-line{min-height:44px;padding:8px 16px;border-radius:8px;border:1px solid #087944;background:#087944;color:#fff;font-weight:700}
 #share-line:hover:enabled{background:#056238}
 #share-line:disabled{background:#e8e9e8;border-color:#dadcda;color:#646764;opacity:1}
+.shared-control{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 5px;cursor:pointer;font-size:.95rem}
+.shared-control input{width:18px;height:18px;margin:0;accent-color:#087944}
+.pill.shared{background:#dbf4e5;color:#085b35;white-space:nowrap}
 #share-manual{width:100%;min-height:9rem;font:inherit;margin-top:.6rem}
 </style>
 </head>
@@ -40,6 +43,7 @@
 <div class="buttons"><button class="secondary" type="button" id="save">儲存草稿</button><button class="primary" type="button" id="publish">確認並發布這則</button><button class="secondary" type="button" id="recheck" hidden>核對發布結果</button><span class="save-hint" id="draft-state" role="status"></span></div><div id="detail-status" class="alert" role="status"></div>
 <section id="personal-share" aria-label="個人 LINE 分享"><p class="meta" id="share-hint"></p>
 <div class="buttons"><button id="share-line" type="button" disabled aria-describedby="share-hint">分享至 LINE 群組</button>
+<label id="shared-control" class="shared-control" hidden><input id="mark-shared" type="checkbox" disabled>已分享</label>
 <button id="copy-share" class="secondary" type="button" hidden>複製通知</button></div>
 <p id="share-feedback" class="meta" role="status" aria-live="polite"></p><textarea class="field" id="share-manual" readonly hidden aria-label="可手動複製的完整通知"></textarea></section></div></div></section></div></main>
 <noscript><p class="shell">請開啟瀏覽器的 JavaScript 以使用評論管理室。</p></noscript>
@@ -67,6 +71,7 @@ let reviews = new Map(), drafts = new Map(), issues = new Map();
 let active = '', tab = 'pending', connected = false, currentLoad = 0, session = 0;
 let connectionBusy = false;
 const busy = new Set(), unresolved = new Set();
+const sharedUpdates = new Map();
 const labels = {pending:'待回覆',sending:'發布中',unknown:'待確認',posted:'已回覆'};
 const sections = [['pending','待處理'],['posted','已回覆'],['all','全部']];
 const stampFormat = new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
@@ -164,7 +169,7 @@ function storeToken(value) {
 }
 function loginScreen(message='') {
   session++;currentLoad++;
-  storeToken(''); reviews.clear();drafts.clear();issues.clear();busy.clear();unresolved.clear();
+  storeToken(''); reviews.clear();drafts.clear();issues.clear();busy.clear();unresolved.clear();sharedUpdates.clear();
   active='';connected=false;tab='pending';connectionBusy=false;
   $('login-view').hidden=false;$('app').hidden=true;$('top-actions').hidden=true;
   $('connect-panel').hidden=true;$('key').value='';$('draft').value='';$('password').value='';
@@ -272,6 +277,7 @@ function renderList(forceId='') {
     const line=document.createElement('span');line.className='entry-line';
     const st=usedState(r);
     line.append(tag(r.branch||'分店','entry-title','strong'),tag(r.stars?r.stars+' 星':'未評星','pill'+(r.stars<=2?' low':'')),tag(labels[st],'pill '+st));
+    if(st==='posted' && r.shared===true)line.append(tag('已分享','pill shared'));
     b.append(line,tag((r.name||'未具名顧客')+' · '+dateLabel(r),'meta'),tag(r.comment||'僅留下星等','snippet'));
     b.onclick=()=>{
       active=r.id;renderList(r.id);
@@ -302,6 +308,9 @@ function renderDetail() {
   $('recheck').disabled=running;$('draft-state').textContent=posted?'':running?'處理中…':local?.conflict?'請選擇草稿版本':local?'尚未儲存':'';
   const shareReady=canShareReview(r);
   $('share-line').disabled=!shareReady;
+  $('shared-control').hidden=!posted || !r.reply.trim();
+  $('mark-shared').checked=sharedUpdates.get(r.id) ?? (r.shared===true);
+  $('mark-shared').disabled=!shareReady || sharedUpdates.has(r.id);
   $('copy-share').hidden=!shareReady;
   $('share-hint').textContent=shareReady?'建議分享：'+r.branch+'員工群組'+(r.lineStatus==='sent'?'（官方帳號曾推播這則回覆）':''):'Google 回覆確認發佈後即可分享。';
   if($('personal-share').dataset.review!==r.id||!shareReady){
@@ -572,6 +581,27 @@ $('share-line').onclick=()=>{
   $('share-feedback').textContent='請在 LINE 選擇「'+row.branch+'」群組並送出。若分享視窗未開啟，可使用「複製通知」。';
 };
 $('copy-share').onclick=()=>{const row=reviews.get(active);if(canShareReview(row))copyNotice(row);};
+$('mark-shared').onchange=async event=>{
+  const row=reviews.get(active);
+  if(!canShareReview(row)||sharedUpdates.has(row.id))return;
+  const shared=event.target.checked, identity=session;
+  sharedUpdates.set(row.id,shared);
+  renderDetail();
+  try{
+    const data=await api('/api/shared','PUT',{id:row.id,rev:row.rev,shared});
+    if(identity!==session)return;
+    const saved=normalized(data.review);
+    if(saved?.id!==row.id || saved.shared!==shared)throw new ApiError('未收到分享標記的儲存確認。');
+    register(saved);
+    note(row.id,shared?'已儲存分享標記。':'已取消分享標記。');
+  }catch(err){
+    if(identity!==session || !token)return;
+    if(err.status===409 || !err.status || err.status>=500)await load({quiet:true});
+    if(identity===session && token)note(row.id,'請核對分享標記。'+err.message,true);
+  }finally{
+    if(identity===session){sharedUpdates.delete(row.id);renderList();}
+  }
+};
 $('save').onclick=()=>mutate('save');$('publish').onclick=()=>mutate('publish');$('recheck').onclick=()=>mutate('recheck');
 window.addEventListener('beforeunload',e=>{if(drafts.size){e.preventDefault();e.returnValue='';}});
 if(token)enter();else{backendFallback(false);$('username').focus();}
