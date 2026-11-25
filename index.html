@@ -71,7 +71,7 @@ const labels = {pending:'待回覆',sending:'發布中',unknown:'待確認',post
 const sections = [['pending','待處理'],['posted','已回覆'],['all','全部']];
 const stampFormat = new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
 class ApiError extends Error {
-  constructor(message,status=0){super(message);this.status=status;}
+  constructor(message,status=0,changedReview=null){super(message);this.status=status;this.changedReview=changedReview;}
 }
 const bridgeProtocol='xishi-comment-bridge/1';
 const bridgeNonce=()=>Array.from(crypto.getRandomValues(new Uint8Array(16)),n=>n.toString(16).padStart(2,'0')).join('');
@@ -197,7 +197,8 @@ async function api(path, method='GET', body) {
   }
   if(!data || status<200 || status>=300 || data.error){
     if(!data) backendFallback(true);
-    throw new ApiError(typeof data?.error==='string'?data.error:'服務暫時無法完成要求。',status);
+    const changedReview=status===409 && data?.code==='review_changed' ? normalized(data.review) : null;
+    throw new ApiError(typeof data?.error==='string'?data.error:'服務暫時無法完成要求。',status,changedReview);
   }
   backendFallback(false);return data;
 }
@@ -444,6 +445,15 @@ async function mutate(mode) {
     finishUpdate(id,data,mode);
   }catch(err){
     if(identity!==session||!token)return;
+    if(mode==='publish' && err.changedReview?.id===id){
+      register(err.changedReview);
+      if(active===id){
+        if($('stars').value && Number($('stars').value)!==err.changedReview.stars)$('stars').value='';
+        if($('search').value && !filtered().some(row=>row.id===id))$('search').value='';
+      }
+      note(id,err.message,true);
+      return;
+    }
     if(mode==='publish' && (!err.status || err.status>=500)){unresolved.add(id);}
     if(err.status===409||err.status===412)await load({quiet:true});
     if(identity===session && token)note(id,err.message,true);
