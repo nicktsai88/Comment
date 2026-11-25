@@ -4,40 +4,208 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="light"><meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#e50615"><title>囍事快剪｜評論管理室</title>
 <style>
-:root{--paper:#fcf8f5;--white:#fff;--ink:#301f21;--muted:#66565a;--line:#e9dcdc;--brand:#b60b20;--brand-dark:#930b20;--rose:#fff0e6;--amber:#8a4e1f;--amber-bg:#f9eddf;--red:#9e3934;--red-bg:#fcf1ee;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:16px;color:var(--ink);background:var(--paper);font-synthesis:none}*{box-sizing:border-box}body{margin:0;line-height:1.55}button,input,select,textarea{font:inherit}button,select{touch-action:manipulation}button{cursor:pointer}button:disabled{cursor:default;opacity:.48}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid #b74d00;outline-offset:3px}[hidden]{display:none!important}.shell{max-width:1460px;margin:auto;padding:0 clamp(14px,3vw,48px)}button,.control,.field{border:1px solid var(--line);border-radius:9px;background:var(--white);color:var(--ink)}button{min-height:42px;padding:7px 14px;font-weight:620}button:hover:not(:disabled){border-color:#c4867b}.primary{background:var(--brand);color:white;border-color:var(--brand)}.primary:hover:not(:disabled){background:var(--brand-dark);border-color:var(--brand-dark)}.secondary{color:var(--brand);background:#fff8f5}.ghost{background:transparent;color:inherit}.field,.control{min-height:44px;padding:8px 12px;width:100%}label,.label{font-size:.9rem;font-weight:650}h1,h2,h3,p{margin:0}h1{font-size:clamp(1.75rem,4vw,2.5rem);letter-spacing:-.035em;line-height:1.18}h2{font-size:clamp(1.3rem,2.8vw,1.7rem);line-height:1.3}h3{font-size:1rem}.muted,.meta,.status-text{color:var(--muted)}.meta,.status-text{font-size:.87rem}.brand{display:inline-flex;align-items:center;gap:11px;font-size:1.05rem;font-weight:750;letter-spacing:.04em}.top{background:#fff;border-bottom:1px solid var(--line)}.top-inner{min-height:64px;display:flex;align-items:center;justify-content:space-between;gap:12px}.top-actions,.buttons,.metrics,.field-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.top-actions button{font-size:.9rem;min-height:38px}.login-layout{display:grid;min-height:calc(100vh - 65px);align-items:center;justify-items:center;padding:32px 16px}.login-panel{width:min(100%,450px);border:1px solid var(--line);border-top:5px solid var(--brand);background:white;padding:clamp(24px,5vw,42px);border-radius:16px;box-shadow:0 16px 45px #70122612}.login-panel h1{font-size:2rem;margin:.25rem 0 1.5rem}.stack{display:grid;gap:16px}.stack label{display:grid;gap:5px}.login-panel .primary{width:100%;margin-top:4px}.alert{background:#fff3e7;color:#793b14;border:1px solid #ead0b7;padding:10px 14px;border-radius:9px;font-size:.92rem;overflow-wrap:anywhere}.alert:empty{display:none}.alert.error{background:var(--red-bg);color:#8a302c;border-color:#e4c1bb}.linkline{margin-top:10px;font-size:.94rem}a{color:var(--brand);font-weight:650}.app-main{padding-top:26px;padding-bottom:54px}.toolbar{display:flex;align-items:end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:18px}.toolbar h1{margin-bottom:.26rem}.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}.tab{font-size:.94rem;background:transparent;border:1px solid var(--line);color:var(--muted);display:flex;align-items:center;gap:7px}.tab[aria-pressed=true]{color:var(--white);background:var(--brand);border-color:var(--brand)}.num{font-variant-numeric:tabular-nums;font-weight:600}.app-status{margin:10px 0}.connect{margin:12px 0;border:1px solid var(--line);background:white;border-radius:11px;padding:14px 16px}.connect h2{font-size:1.1rem}.connect p{margin:.35rem 0 .75rem;font-size:.94rem;color:var(--muted)}.connect details{margin-top:12px}.connect summary{width:fit-content;cursor:pointer;color:var(--brand);font-weight:650}.connect details form{margin-top:8px}.connect label{min-width:190px;flex:1;max-width:540px}.connect input{display:block;margin-top:4px}.connect .field-group{align-items:end}.workspace{display:grid;grid-template-columns:minmax(260px,min(33%,430px)) minmax(0,1fr);gap:16px;align-items:start}.panel{background:white;border:1px solid var(--line);border-radius:14px;overflow:hidden;min-width:0}.list-head,.detail-head{padding:18px 20px;border-bottom:1px solid var(--line)}.list-head h2{font-size:1.06rem}.list-head .search{margin-top:12px}.filter-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.83fr);gap:8px;margin-top:9px}.filter-pair label{display:grid;gap:3px}.filter-pair label,.search{font-size:.85rem}.search{display:grid;gap:3px}.filter-pair select{font-size:.94rem}.list{display:grid;gap:0;max-height:76vh;overflow:auto;overscroll-behavior:contain}.entry{width:100%;padding:13px 18px;text-align:left;border-radius:0;border:0;border-bottom:1px solid #f2e8e4;border-left:4px solid transparent;min-height:78px;display:grid;gap:4px;background:white}.entry:last-child{border-bottom:0}.entry[aria-current=true]{background:#fff0ef;border-left-color:var(--brand)}.entry:hover:not(:disabled){background:#fff8f5;border-left-color:#ee8301}.entry-line,.detail-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.entry-title{font-size:1rem}.entry .meta{font-size:.79rem;font-weight:450}.snippet{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.9rem;color:#47373a;font-weight:450}.pill{display:inline-flex;align-items:center;border-radius:5px;font-size:.78rem;font-weight:700;padding:2px 7px;background:#f5efeb;color:#594749}.pill.low,.pill.unknown{color:var(--amber);background:var(--amber-bg)}.pill.posted{background:var(--rose);color:#76400f}.pill.pending{background:#ffedea;color:#8a2736}.pill.sending{background:#f5eccf;color:#785a23}.detail-head{padding:20px 24px}.detail-top .meta{margin-left:auto}.detail-head h2{margin:7px 0 3px}.body-detail{padding:20px 24px 25px;display:grid;gap:18px}.original{background:#fff9f4;border:1px solid #f1e5dd;padding:14px 16px;border-radius:9px}.original h3,.reply h3{font-size:.92rem;margin-bottom:6px}.message{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.72}.edit-label{display:block;font-size:1rem;margin-bottom:5px}.editor{width:100%;min-height:180px;resize:vertical;font-size:1rem;line-height:1.65;padding:12px 14px;border:1px solid #c6aca8;border-radius:9px;color:var(--ink);background:white}.reply{padding:14px 16px;background:#fff4e6;border-radius:9px}.buttons{align-items:center;gap:9px}.save-hint{flex:1;text-align:right;font-size:.88rem;color:var(--muted)}.notice{font-size:.94rem;padding:10px 12px;background:var(--amber-bg);border-radius:7px;color:#70471e}.notice .buttons{margin-top:7px}.empty{padding:28px 20px;color:var(--muted);font-size:.94rem}.mobile-back{display:none}.fallback{display:block;margin:10px 0}.reader{scroll-margin-top:8px}
-@media(min-width:1500px){.shell{max-width:min(88vw,1760px)}.workspace{grid-template-columns:minmax(355px,31%) minmax(0,1fr)}}
-@media(max-width:800px){.shell{padding-left:12px;padding-right:12px}.workspace{grid-template-columns:minmax(225px,35%) minmax(0,1fr);gap:10px}.list-head,.detail-head,.body-detail{padding:14px}.entry{padding:10px 11px}.field-group{gap:7px}.save-hint{text-align:left;flex-basis:100%}}
-@media(max-width:600px){.top-inner{min-height:56px}.app-main{padding-top:16px}.workspace{grid-template-columns:1fr}.list{max-height:34vh}.list-head{padding:12px}.filter-pair{margin-top:6px}.search{margin-top:6px!important}.entry{min-height:68px}.toolbar{align-items:start}.detail-top .meta{margin-left:0}.mobile-back{display:inline-block;font-size:.82rem;min-height:35px;margin-left:auto}.buttons button{flex:1}.save-hint{flex-basis:100%}.top-actions{gap:4px}.top-actions button{padding:5px 8px}.tab{padding:5px 8px;min-height:38px}.tabs{gap:5px}.editor{min-height:200px}}
-.brand-logo{display:block;width:clamp(110px,13vw,142px);height:auto}
-.top{border-top:4px solid #e50615}
-.top-inner{padding-block:7px}
-.login-layout{background:radial-gradient(ellipse at 4% 5%,#ffe6df 0,transparent 42%),radial-gradient(ellipse at 98% 96%,#ffedd8 0,transparent 38%),var(--paper)}
-.login-panel{border-top:0;position:relative;overflow:hidden}
-.login-panel::before{content:"";position:absolute;inset:0 0 auto;height:5px;background:linear-gradient(90deg,#e50615 0 70%,#ee8301 70%)}
-.entry[aria-current=true]{border-left-color:#e50615}
-@media(max-width:600px){.brand-logo{width:104px}.top-inner{min-height:55px}}
-#personal-share{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
-#personal-share .buttons{margin-top:6px}
-#share-line{min-height:44px;padding:8px 16px;border-radius:8px;border:1px solid #087944;background:#087944;color:#fff;font-weight:700}
-#share-line:hover:enabled{background:#056238}
-#share-line:disabled{background:#e8e9e8;border-color:#dadcda;color:#646764;opacity:1}
-.shared-control{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 5px;cursor:pointer;font-size:.95rem}
-.shared-control input{width:18px;height:18px;margin:0;accent-color:#087944}
-.pill.shared{background:#dbf4e5;color:#085b35;white-space:nowrap}
-#share-manual{width:100%;min-height:9rem;font:inherit;margin-top:.6rem}
+:root {
+  color-scheme: light;
+  font: 16px/1.55 "Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  font-synthesis: none;
+  --ink: #342432;
+  --muted: #665766;
+  --line: #e6dce4;
+  --brand: #a51746;
+  --brand-fill: linear-gradient(110deg,#ab1544 12%,#b62d40 67%,#ab3a1c);
+  --mint-fill: linear-gradient(110deg,#087045,#066959);
+  --ribbon: linear-gradient(90deg,#de2145 0%,#fc956b 30%,#ffc770 48%,#d1acd9 72%,#95cdbb 100%);
+  --hero: linear-gradient(105deg,#ffedf2 1%,#ffdfd5 47%,#ffebcb 70%,#eedbee 100%);
+  --shadow: 0 5px 19px rgba(77,35,61,.065);
+  color: var(--ink);
+  background: #fff7f7;
+}
+* {box-sizing:border-box}
+[hidden] {display:none!important}
+body {
+  margin:0; min-height:100vh; min-height:100svh;
+  background:radial-gradient(ellipse at 0 0,#ffe4e7 0,transparent 44%),
+    radial-gradient(ellipse at 100% 26%,#eee5ff 0,transparent 41%),
+    linear-gradient(150deg,#fff5f2 6%,#fffbf2 58%,#e9f5ef 100%);
+}
+h1,h2,h3,p {margin:0}
+h1 {font-size:clamp(1.85rem,3.7vw,2.65rem);line-height:1.18;letter-spacing:-.035em}
+h2 {font-size:clamp(1.3rem,2.8vw,1.75rem);line-height:1.3}
+h3 {font-size:1rem}
+label,.label {font-size:.9rem;font-weight:650}
+a {color:var(--brand);font-weight:650}
+button,input,select,textarea {font:inherit}
+button,select {touch-action:manipulation}
+button,.field,.control {border:1px solid #dccdd7;border-radius:12px;background:#fff;color:var(--ink)}
+button {min-height:42px;padding:7px 14px;font-weight:650;cursor:pointer}
+button:disabled {cursor:default;opacity:.48}
+button:hover:enabled {border-color:#b77991}
+:where(button,a,input,select,textarea,summary):focus-visible {outline:3px solid #7b4398;outline-offset:3px}
+.primary,.tab[aria-pressed=true] {background:var(--brand-fill);color:white;border-color:#a91e42}
+.primary:hover:enabled,.tab[aria-pressed=true]:hover {background:#951235}
+.secondary {color:#932047;background:#fff7f9}
+.ghost {background:white;color:#493c4a}
+.field,.control {width:100%;min-height:43px;padding:8px 12px}
+.field:hover,.control:hover,.editor:hover {border-color:#b694aa}
+.meta,.muted,.status-text,.save-hint {color:var(--muted)}
+.meta,.status-text,.save-hint {font-size:.89rem}
+.shell {max-width:1460px;margin:auto;padding-inline:clamp(14px,3vw,48px)}
+.top {background:var(--ribbon) top / 100% 5px no-repeat,#fffcfd;border-bottom:1px solid #eadde3;padding-top:5px}
+.top-inner,.top-actions,.buttons,.field-group,.entry-line,.detail-top {display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.top-inner {min-height:62px;padding-block:7px;justify-content:space-between}
+.brand,.brand-logo {display:block}
+.brand-logo {width:clamp(99px,11vw,127px);height:auto}
+.top-actions a,.top-actions button {display:inline-flex;align-items:center;min-height:38px;padding:6px 12px;border-radius:20px;font-size:.9rem}
+.top-actions a {color:#125f4b;background:#e4f4eb;text-decoration:none}
+.top-actions a:hover {text-decoration:underline}
+.app-main {padding-top:22px;padding-bottom:54px}
+.toolbar,.login-cap {
+  position:relative;isolation:isolate;
+  background:var(--hero);
+}
+.toolbar::before,.login-cap::before {
+  content:"";position:absolute;z-index:-1;inset:0;pointer-events:none;border-radius:inherit;
+  background:radial-gradient(circle,#fff9 1.5px,transparent 2px) right 10px top 6px / 13px 13px;
+  mask-image:linear-gradient(90deg,transparent 35%,black);
+}
+.toolbar {display:flex;align-items:center;gap:16px;margin-bottom:16px;padding:clamp(16px,2vw,27px) clamp(18px,2.7vw,34px);border:1px solid #edcdd6;border-radius:23px;box-shadow:var(--shadow)}
+.toolbar h1,.login-cap h1 {color:#642237}
+.toolbar .meta {margin-top:5px;color:#654456}
+.toolbar #refresh {margin-left:auto;flex:none;background:#fffaf8;border-color:#d9adbc;color:#73263f}
+.salon-stamp {position:relative;isolation:isolate;display:grid;place-items:center;flex:none;width:3.5rem;height:3.5rem;transform:rotate(-9deg);background:#fffafa;border:2px solid white;border-radius:20px;box-shadow:0 3px 0 #c7567136,0 5px 10px #a4466014;font:1.85rem/1 "Apple Color Emoji","Segoe UI Emoji",sans-serif}
+.salon-stamp::before {content:"";position:absolute;inset:4px;border-radius:15px;border:1px dashed #df9aa4}
+.salon-stamp::after {content:"";position:absolute;right:-5px;top:-4px;width:14px;height:14px;background:#f5a42d;clip-path:polygon(50% 0,65% 36%,100% 50%,65% 64%,50% 100%,35% 64%,0 50%,35% 36%)}
+.section-icon {display:inline-block;margin-right:.45em;font: .95em/1 "Apple Color Emoji","Segoe UI Emoji",sans-serif;vertical-align:baseline}
+.login-layout {min-height:calc(100vh - 68px);min-height:calc(100svh - 68px);display:grid;place-items:center;padding:28px 14px}
+.login-panel,.panel,.connect {border:1px solid var(--line);background:#fff;border-radius:20px;box-shadow:var(--shadow)}
+.login-panel {width:min(100%,445px);overflow:hidden;box-shadow:0 15px 40px #743d6019}
+.login-cap {display:flex;gap:15px;align-items:center;padding:25px clamp(16px,5vw,30px);border-bottom:1px solid #eed4da}
+.login-cap h1 {font-size:clamp(1.45rem,5vw,1.85rem)}
+.login-cap .salon-stamp {width:2.9rem;height:2.9rem;border-radius:16px;font-size:1.55rem}
+.stack {display:grid;gap:16px;padding:24px clamp(18px,5vw,30px)}
+.stack label,.filter-pair label,.search {display:grid;gap:5px}
+.login-panel .primary {width:100%;margin-top:3px}
+.fallback {display:block;margin:10px 0}
+.login-panel .fallback {margin:0 24px 20px}
+.tabs {display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tab {display:flex;align-items:center;gap:7px;min-height:38px;padding:5px 14px;font-size:.94rem;border-radius:22px;background:#fffcfd;color:#67485d}
+.num {border-radius:20px;padding:0 .45em;background:#f5e8ed;font-size:.84em;font-variant-numeric:tabular-nums}
+.tab[aria-pressed=true] .num {background:#ffffff2e;color:white}
+.workspace {display:grid;grid-template-columns:minmax(260px,min(33%,430px)) minmax(0,1fr);gap:16px;align-items:start}
+.panel {overflow:hidden;min-width:0}
+.list-head,.detail-head {padding:17px 20px;border-bottom:1px solid var(--line)}
+.list-head {background:linear-gradient(120deg,#f4edfd,#fff5f5)}
+.list-head h2 {font-size:1.12rem}
+.list-head .search {margin-top:12px}
+.filter-pair {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.83fr);gap:8px;margin-top:9px}
+.filter-pair label,.search {font-size:.88rem}
+.filter-pair select {font-size:.95rem}
+.list {display:grid;max-height:76vh;overflow:auto;overscroll-behavior:contain}
+.entry {width:100%;padding:12px 17px;min-height:78px;display:grid;gap:4px;text-align:left;border:0;border-bottom:1px solid #f0e8ec;border-left:4px solid transparent;border-radius:0;background:white}
+.entry:last-child {border-bottom:0}
+.entry:hover:enabled {background:#fff8f7}
+.entry[aria-current=true],.entry[aria-current=true]:hover {background:linear-gradient(100deg,#ffe8ed,#fff4e9);border-left-color:#c22654}
+.entry:focus-visible {outline-offset:-3px}
+.entry-line,.detail-top {gap:7px}
+.entry-title {font-size:1rem}
+.entry .meta {font-size:.82rem;font-weight:450}
+.snippet {min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.91rem;color:#4a3a48;font-weight:450}
+.pill {display:inline-flex;align-items:center;white-space:nowrap;padding:2px 9px;border-radius:22px;background:#fbeed6;color:#734610;font-size:.8rem;font-weight:700}
+.pill.pending {background:#ffe1e6;color:#8a213b}
+.pill.posted {background:#ece4fb;color:#594084}
+.pill.low,.pill.unknown,.pill.sending {background:#fff0cd;color:#774318}
+.pill.shared {background:#d5f2df;color:#155837}
+.reader {scroll-margin-top:8px}
+.detail-head {padding:18px 24px;background:linear-gradient(105deg,#fff6ee,#fff4f8 74%,#f5edfd)}
+.detail-top .meta {margin-left:auto}
+.detail-head h2 {margin:7px 0 3px}
+.body-detail {padding:20px 24px 24px;display:grid;gap:16px}
+.original,.reply {padding:15px 17px;border:1px solid;border-radius:15px}
+.original {background:linear-gradient(115deg,#fff4e8,#fffbf6 72%);border-color:#eddac8}
+.reply {background:linear-gradient(115deg,#eaf7ef,#f7fcf9 72%);border-color:#cfe6da}
+.original h3,.reply h3 {font-size:1rem;margin-bottom:7px}
+.original h3 {color:#803e20}
+.reply h3 {color:#245b48}
+.message {white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.78}
+.edit-label {display:block;font-size:1rem;margin-bottom:6px;color:#5c3d75}
+.editor {width:100%;min-height:180px;resize:vertical;font-size:1rem;line-height:1.72;padding:12px 14px;background:#fdfbff;color:var(--ink);border:1px solid #c7afcf;border-radius:13px}
+.save-hint {flex:1;text-align:right}
+.app-status {margin:10px 0}
+.connect {margin:12px 0;padding:14px 16px}
+.connect h2 {font-size:1.12rem}
+.connect p,.empty {font-size:.94rem;color:var(--muted)}
+.connect p {margin:.35rem 0 .75rem}
+.connect details,.connect details form {margin-top:10px}
+.connect summary {width:fit-content;cursor:pointer;color:var(--brand);font-weight:650}
+.connect label {min-width:min(190px,100%);flex:1;max-width:540px}
+.connect input {display:block;margin-top:4px}
+.connect .field-group {align-items:end}
+.alert,.notice {padding:10px 14px;border-radius:10px;font-size:.94rem;overflow-wrap:anywhere}
+.alert {background:#fff2e3;color:#773e1f;border:1px solid #edd3b8}
+.alert:empty {display:none}
+.alert.error {background:#fff0f1;color:#8a203a;border-color:#edc8cc}
+.notice {background:#fff1cf;color:#70431a}
+.notice .buttons {margin-top:7px}
+.empty {padding:28px 20px}
+.mobile-back {display:none}
+#personal-share {padding:13px 16px;background:linear-gradient(108deg,#eef9f2,#f5f9f7);border:1px solid #d7e7dd;border-radius:14px}
+#personal-share .buttons {margin-top:7px}
+#share-line {min-height:44px;padding:8px 16px;background:var(--mint-fill);color:#fff;border-color:#08633e}
+#share-line:hover:enabled {background:#095638}
+#share-line:disabled {background:#e8e9e8;border-color:#dadcda;color:#5c625e;opacity:1}
+.shared-control {display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 5px;font-size:.95rem;cursor:pointer}
+.shared-control input {width:18px;height:18px;margin:0;accent-color:#087944}
+#share-manual {width:100%;min-height:9rem;margin-top:.6rem;font:inherit}
+#share-feedback:not(:empty) {margin-top:.5rem}
+@media(min-width:1500px) {
+  .shell {max-width:min(88vw,1760px)}
+  .workspace {grid-template-columns:minmax(355px,31%) minmax(0,1fr)}
+}
+@media(max-width:800px) {
+  .shell {padding-inline:12px}
+  .workspace {grid-template-columns:minmax(225px,35%) minmax(0,1fr);gap:10px}
+  .list-head,.detail-head,.body-detail {padding:14px}
+  .entry {padding:10px 11px}
+  .save-hint {text-align:left;flex-basis:100%}
+}
+@media(max-width:600px) {
+  .top-inner {min-height:54px;gap:6px}
+  .brand-logo {width:86px}
+  .top-actions {gap:4px}
+  .top-actions a,.top-actions button {padding:5px 8px;font-size:.82rem}
+  .app-main {padding-top:12px}
+  .workspace {grid-template-columns:minmax(0,1fr)}
+  .toolbar {display:grid;grid-template-columns:2rem minmax(0,1fr) auto;gap:8px;padding:14px 10px;border-radius:16px;margin-bottom:10px}
+  .toolbar .salon-stamp {width:2rem;height:2rem;border-radius:10px;font-size:1.12rem}
+  .toolbar .salon-stamp::before {inset:2px;border-radius:7px}
+  .toolbar .salon-stamp::after {width:9px;height:9px}
+  .toolbar h1 {font-size:clamp(1.15rem,4.6vw,1.7rem)}
+  .toolbar .meta {font-size:.79rem}
+  .toolbar #refresh {padding-inline:9px;font-size:.85rem}
+  .tabs {gap:5px;margin-bottom:10px}
+  .tab {padding:5px 10px}
+  .list {max-height:34vh}
+  .list-head {padding:12px}
+  .filter-pair,.list-head .search {margin-top:6px}
+  .entry {min-height:68px}
+  .detail-top .meta {margin-left:0}
+  .mobile-back {display:inline-block;margin-left:auto;min-height:35px;font-size:.82rem}
+  .buttons button {flex:1}
+  .editor {min-height:200px}
+}
 </style>
 </head>
 <body>
 <header class="top"><div class="shell top-inner"><div class="brand"><img class="brand-logo" src="./brand-logo.webp" width="512" height="204" alt="囍事快剪"></div><div class="top-actions" id="top-actions" hidden><a href="https://xishi-comment-desk.nick-minori.chatgpt.site/line">LINE 群組</a><button class="ghost" id="connect-toggle" type="button" aria-controls="connect-panel" aria-expanded="false">商家連線</button><button class="ghost" id="logout" type="button">登出</button></div></div></header>
-<main id="login-view" class="login-layout"><section class="login-panel"><h1>登入評論管理室</h1><form id="login" class="stack"><label>管理帳號<input class="field" name="username" id="username" autocomplete="username" autocapitalize="off" spellcheck="false" required></label><label>密碼<input class="field" type="password" id="password" name="password" autocomplete="current-password" required></label><button class="primary" id="login-submit" type="submit">登入</button><div class="alert" id="login-status" role="status"></div></form><a class="fallback" id="login-fallback" hidden>直接開啟私有管理後台</a></section></main>
-<main class="shell app-main" id="app" hidden><div class="toolbar"><div><h1>Google 評論管理室</h1><p class="meta" id="summary" aria-live="polite"></p></div><button id="refresh" type="button" class="secondary">重新整理</button></div>
+<main id="login-view" class="login-layout"><section class="login-panel"><div class="login-cap"><span class="salon-stamp" aria-hidden="true">✂️</span><h1>登入評論管理室</h1></div><form id="login" class="stack"><label>管理帳號<input class="field" name="username" id="username" autocomplete="username" autocapitalize="off" spellcheck="false" required></label><label>密碼<input class="field" type="password" id="password" name="password" autocomplete="current-password" required></label><button class="primary" id="login-submit" type="submit">登入</button><div class="alert" id="login-status" role="status"></div></form><a class="fallback" id="login-fallback" hidden>直接開啟私有管理後台</a></section></main>
+<main class="shell app-main" id="app" hidden><div class="toolbar"><span class="salon-stamp" aria-hidden="true">✂️</span><div><h1>Google 評論管理室</h1><p class="meta" id="summary" aria-live="polite"></p></div><button id="refresh" type="button" class="secondary">重新整理</button></div>
 <div class="alert app-status" id="global-status" role="status"></div><div class="notice app-status" id="sync-warning" role="status" hidden></div><div class="buttons" id="relay-controls" hidden><button id="relay-open" type="button" class="secondary">連接管理後台</button><a class="fallback" id="app-fallback" hidden>直接開啟私有管理後台</a></div>
 <section id="connect-panel" class="connect" hidden><h2>Google 商家連線</h2><p id="connect-description"></p><button type="button" class="primary" id="authorize">連結 Windsor.ai</button><a class="fallback" id="oauth-link" target="_blank" rel="noopener noreferrer" hidden>前往 Windsor.ai 完成授權</a><details id="alternative-key"><summary>改用 API 金鑰</summary><form id="connect-form" class="field-group"><label>Windsor.ai API 金鑰<input id="key" type="password" class="field" autocomplete="off" spellcheck="false" required></label><button id="connect-save" type="submit" class="secondary">儲存連線</button></form></details><div class="alert" id="connect-status" role="status"></div></section>
 <nav id="tabs" class="tabs" aria-label="回覆狀態"></nav>
-<div class="workspace"><section class="panel" id="inbox"><div class="list-head"><h2>評論清單</h2><label class="search">搜尋評論<input id="search" class="field" type="search" placeholder="輸入顧客、分店或留言關鍵字"></label><div class="filter-pair"><label>分店<select class="control" id="branch"></select></label><label>星等<select class="control" id="stars"><option value="">全部星等</option><option value="1">1 星</option><option value="2">2 星</option><option value="3">3 星</option><option value="4">4 星</option><option value="5">5 星</option></select></label></div></div><div class="list" id="list" aria-label="篩選結果"></div></section>
-<section class="panel reader" id="reader" aria-labelledby="reader-heading"><div id="no-review" class="empty">請從清單選取一則評論。</div><div id="detail" hidden><header class="detail-head"><div class="detail-top"><span id="detail-stars" class="pill"></span><span id="detail-state" class="pill"></span><span id="detail-date" class="meta"></span><button id="back" class="mobile-back secondary" type="button">回到清單</button></div><h2 id="reader-heading"></h2><p id="reviewer" class="meta"></p></header><div class="body-detail"><section class="original"><h3>顧客原文</h3><div class="message" id="comment"></div></section>
-<section id="posted" class="reply" hidden><h3>商家回覆</h3><div class="message" id="posted-text"></div></section>
-<section id="draft-section"><label class="edit-label" for="draft"><span id="draft-title">回覆草稿</span></label><textarea class="editor" id="draft" aria-describedby="draft-state" spellcheck="true"></textarea></section>
+<div class="workspace"><section class="panel" id="inbox"><div class="list-head"><h2><span class="section-icon" aria-hidden="true">📋</span>評論清單</h2><label class="search">搜尋評論<input id="search" class="field" type="search" placeholder="輸入顧客、分店或留言關鍵字"></label><div class="filter-pair"><label>分店<select class="control" id="branch"></select></label><label>星等<select class="control" id="stars"><option value="">全部星等</option><option value="1">1 星</option><option value="2">2 星</option><option value="3">3 星</option><option value="4">4 星</option><option value="5">5 星</option></select></label></div></div><div class="list" id="list" aria-label="篩選結果"></div></section>
+<section class="panel reader" id="reader" aria-labelledby="reader-heading"><div id="no-review" class="empty">請從清單選取一則評論。</div><div id="detail" hidden><header class="detail-head"><div class="detail-top"><span id="detail-stars" class="pill"></span><span id="detail-state" class="pill"></span><span id="detail-date" class="meta"></span><button id="back" class="mobile-back secondary" type="button">回到清單</button></div><h2 id="reader-heading"></h2><p id="reviewer" class="meta"></p></header><div class="body-detail"><section class="original"><h3><span class="section-icon" aria-hidden="true">💬</span>顧客原文</h3><div class="message" id="comment"></div></section>
+<section id="posted" class="reply" hidden><h3><span class="section-icon" aria-hidden="true">💌</span>商家回覆</h3><div class="message" id="posted-text"></div></section>
+<section id="draft-section"><label class="edit-label" for="draft"><span id="draft-title"><span class="section-icon" aria-hidden="true">✏️</span>回覆草稿</span></label><textarea class="editor" id="draft" aria-describedby="draft-state" spellcheck="true"></textarea></section>
 <div class="notice" id="conflict" hidden><div>這則草稿在其他裝置有更新。請選擇要繼續使用的版本。</div><details><summary>查看伺服器版本</summary><div id="server-version" class="message"></div></details><div class="buttons"><button type="button" id="keep">保留我的文字</button><button type="button" id="adopt">採用伺服器版本</button></div></div>
 <div class="notice" id="uncertain" hidden>發布狀態仍待確認。請先向 Google 查詢結果。</div>
 <div class="buttons"><button class="secondary" type="button" id="save">儲存草稿</button><button class="primary" type="button" id="publish">確認並發布這則</button><button class="secondary" type="button" id="recheck" hidden>核對發布結果</button><span class="save-hint" id="draft-state" role="status"></span></div><div id="detail-status" class="alert" role="status"></div>
