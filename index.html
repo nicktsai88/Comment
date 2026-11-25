@@ -19,7 +19,7 @@
 </style>
 </head>
 <body>
-<header class="top"><div class="shell top-inner"><div class="brand"><img class="brand-logo" src="./brand-logo.webp" width="512" height="204" alt="囍事快剪"></div><div class="top-actions" id="top-actions" hidden><button class="ghost" id="connect-toggle" type="button" aria-controls="connect-panel" aria-expanded="false">商家連線</button><button class="ghost" id="logout" type="button">登出</button></div></div></header>
+<header class="top"><div class="shell top-inner"><div class="brand"><img class="brand-logo" src="./brand-logo.webp" width="512" height="204" alt="囍事快剪"></div><div class="top-actions" id="top-actions" hidden><a href="https://xishi-comment-desk.nick-minori.chatgpt.site/line">LINE 群組</a><button class="ghost" id="connect-toggle" type="button" aria-controls="connect-panel" aria-expanded="false">商家連線</button><button class="ghost" id="logout" type="button">登出</button></div></div></header>
 <main id="login-view" class="login-layout"><section class="login-panel"><h1>登入評論管理室</h1><form id="login" class="stack"><label>管理帳號<input class="field" name="username" id="username" autocomplete="username" autocapitalize="off" spellcheck="false" required></label><label>密碼<input class="field" type="password" id="password" name="password" autocomplete="current-password" required></label><button class="primary" id="login-submit" type="submit">登入</button><div class="alert" id="login-status" role="status"></div></form><a class="fallback" id="login-fallback" hidden>直接開啟私有管理後台</a></section></main>
 <main class="shell app-main" id="app" hidden><div class="toolbar"><div><h1>Google 評論管理室</h1><p class="meta" id="summary" aria-live="polite"></p></div><button id="refresh" type="button" class="secondary">重新整理</button></div>
 <div class="alert app-status" id="global-status" role="status"></div><div class="notice app-status" id="sync-warning" role="status" hidden></div><div class="buttons" id="relay-controls" hidden><button id="relay-open" type="button" class="secondary">連接管理後台</button><a class="fallback" id="app-fallback" hidden>直接開啟私有管理後台</a></div>
@@ -28,6 +28,7 @@
 <div class="workspace"><section class="panel" id="inbox"><div class="list-head"><h2>評論清單</h2><label class="search">搜尋評論<input id="search" class="field" type="search" placeholder="輸入顧客、分店或留言關鍵字"></label><div class="filter-pair"><label>分店<select class="control" id="branch"></select></label><label>星等<select class="control" id="stars"><option value="">全部星等</option><option value="1">1 星</option><option value="2">2 星</option><option value="3">3 星</option><option value="4">4 星</option><option value="5">5 星</option></select></label></div></div><div class="list" id="list" aria-label="篩選結果"></div></section>
 <section class="panel reader" id="reader" aria-labelledby="reader-heading"><div id="no-review" class="empty">請從清單選取一則評論。</div><div id="detail" hidden><header class="detail-head"><div class="detail-top"><span id="detail-stars" class="pill"></span><span id="detail-state" class="pill"></span><span id="detail-date" class="meta"></span><button id="back" class="mobile-back secondary" type="button">回到清單</button></div><h2 id="reader-heading"></h2><p id="reviewer" class="meta"></p></header><div class="body-detail"><section class="original"><h3>顧客原文</h3><div class="message" id="comment"></div></section>
 <section id="posted" class="reply" hidden><h3>商家回覆</h3><div class="message" id="posted-text"></div></section>
+<div id="line-state" hidden><span id="line-text"></span> <button type="button" id="line-retry" hidden>只補送 LINE</button></div>
 <section id="draft-section"><label class="edit-label" for="draft"><span id="draft-title">回覆草稿</span></label><textarea class="editor" id="draft" aria-describedby="draft-state" spellcheck="true"></textarea></section>
 <div class="notice" id="conflict" hidden><div>這則草稿在其他裝置有更新。請選擇要繼續使用的版本。</div><details><summary>查看伺服器版本</summary><div id="server-version" class="message"></div></details><div class="buttons"><button type="button" id="keep">保留我的文字</button><button type="button" id="adopt">採用伺服器版本</button></div></div>
 <div class="notice" id="uncertain" hidden>發布狀態仍待確認。請先向 Google 查詢結果。</div>
@@ -289,6 +290,9 @@ function renderDetail() {
   $('save').disabled=running||!local||local.conflict;
   $('publish').disabled=running||!connected||!draftFor(r).trim()||Boolean(local?.conflict);
   $('recheck').disabled=running;$('draft-state').textContent=posted?'':running?'處理中…':local?.conflict?'請選擇草稿版本':local?'尚未儲存':'';
+  $('line-state').hidden=!posted||!r.lineStatus;
+  $('line-text').textContent=r.lineStatus==='sent'?'LINE 已受理陽明店通知':'陽明店 LINE 通知待處理';
+  $('line-retry').hidden=r.lineStatus!=='ready';$('line-retry').disabled=running;
   const issue=issues.get(r.id);
   setMessage($('detail-status'),issue?.message||'',issue?.error||false);
 }
@@ -406,7 +410,7 @@ function finishUpdate(id, result, mode) {
   register(row);
   if(usedState(row)==='posted' && mode!=='save'){
     if(active===id){tab='posted';$('branch').value='';$('stars').value='';$('search').value='';}
-    note(id,'已確認這則評論有商家回覆。');
+    note(id,result.message||'已確認這則評論有商家回覆。');
   }else if(mode==='save')note(id,'草稿已儲存。');
   else if(mode==='recheck' && usedState(row)==='pending')note(id,'目前查無已發布回覆，可重新檢視草稿。');
   else note(id,'已送出查詢，發布結果仍待確認。');
@@ -431,6 +435,13 @@ async function mutate(mode) {
     if(identity===session && token)note(id,err.message,true);
   }finally{if(identity===session){busy.delete(id);renderList();}}
 }
+$('line-retry').onclick=async()=>{
+  const r=reviews.get(active),identity=session;
+  if(!r||r.lineStatus!=='ready'||!busyStart(r))return;
+  try{const out=await api('/api/line/retry','POST',{id:r.id});if(identity===session){register(normalized(out.review));note(r.id,out.message);}}
+  catch(err){if(identity===session)note(r.id,err.message,true);}
+  finally{if(identity===session){busy.delete(r.id);renderList();}}
+};
 $('save').onclick=()=>mutate('save');$('publish').onclick=()=>mutate('publish');$('recheck').onclick=()=>mutate('recheck');
 window.addEventListener('beforeunload',e=>{if(drafts.size){e.preventDefault();e.returnValue='';}});
 if(token)enter();else{backendFallback(false);$('username').focus();}
