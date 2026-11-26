@@ -414,16 +414,19 @@ function filters() {
   $('branch').replaceChildren(uniqueOption('','全部分店'),...names.map(n=>uniqueOption(n,n)));
   if(names.includes(selected))$('branch').value=selected;
 }
-function priority(r) {
-  const state=usedState(r);if(state==='unknown'||state==='sending')return 0;
-  if(state==='posted')return 4;
-  return r.stars>0 && r.stars<=2?1:r.stars===3?2:3;
+function reviewTimestamp(row) {
+  let value=(row.created || row.reportDate || '').trim();
+  // Older reports store the date or local wall time in Taiwan without a UTC offset.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) value+='T00:00:00+08:00';
+  else if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(value)) value=value.replace(' ','T')+'+08:00';
+  const time=Date.parse(value);
+  return Number.isFinite(time)?time:-Infinity;
 }
 function filtered(){
   const b=$('branch').value,s=$('stars').value,kw=$('search').value.trim().toLocaleLowerCase();
   return [...reviews.values()].filter(r=>(tab==='all'||(tab==='pending'?usedState(r)!=='posted':usedState(r)==='posted')) &&
     (!b||r.branch===b) &&(!s||r.stars===Number(s)) && (!kw||[r.branch,r.name,r.comment,r.reply].some(x=>x.toLocaleLowerCase().includes(kw))))
-    .sort((a,b)=>priority(a)-priority(b)||(usedState(a)==='posted' ? b.created.localeCompare(a.created):a.created.localeCompare(b.created))||a.id.localeCompare(b.id));
+    .sort((a,b)=>reviewTimestamp(b)-reviewTimestamp(a)||a.id.localeCompare(b.id));
 }
 function tag(text,cls,element='span'){const node=document.createElement(element);node.className=cls;node.textContent=text;return node;}
 function renderTabs() {
