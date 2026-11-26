@@ -639,34 +639,34 @@ async function mutate(mode) {
 function canShareReview(row){
   return Boolean(row && usedState(row)==='posted' && row.reply.trim() && !busy.has(row.id));
 }
-// These published review links use permanent, case-sensitive branch codes.
-const branchReviewCodes=Object.freeze({
-  '內惟店':'a',
-  '德惠店':'b',
-  '小港店':'c',
-  '大社店':'d',
-  '斗六一店':'e',
-  '十全店':'f',
-  '陽明店':'g',
-  '福山店':'h',
-  '光遠店':'i',
-  '後昌店':'j',
-  '虎尾店':'k',
-  '華榮店':'l',
-  '斗六二店':'m',
-  '復興店':'n',
-  '大昌店':'o',
-  '五甲店':'p',
-  '明誠店':'q',
-  '瑞隆店':'r',
-  '鼎中店':'s',
-  '武廟店':'t',
-  '一心店':'u',
-  '左營店':'v',
-  '自由店':'w',
-  '大寮店':'x',
-  '華夏店':'y',
-  '建興店':'z'
+// Public Place IDs checked against the 26 Google Business Profile locations.
+const branchPlaceIds=Object.freeze({
+  '內惟店':'ChIJze5240sEbjQRUHGlS1os92k',
+  '德惠店':'ChIJd6GbOaYPbjQRc6HbG-6bxhk',
+  '小港店':'ChIJCWvzxEwdbjQRODP603QqwQM',
+  '大社店':'ChIJLduNmysQbjQRhx7NCFX5ReU',
+  '斗六一店':'ChIJx-LKy9_JbjQRDgYJplzHA5w',
+  '十全店':'ChIJ-Y_e56kFbjQRkGuAa1MJb64',
+  '陽明店':'ChIJa95U69IEbjQRBKl2b5M6tDw',
+  '福山店':'ChIJT6wlgvAFbjQRNU2m04xtjOE',
+  '光遠店':'ChIJa-KAojgbbjQRawmvV9qJjkA',
+  '後昌店':'ChIJKSI3xXkPbjQR4SWuMPG8HPE',
+  '虎尾店':'ChIJ2ebJ4amwbjQR3n5fgPFREmg',
+  '華榮店':'ChIJ1aDHyakFbjQROvaIMkQcPvU',
+  '斗六二店':'ChIJGcPpgIfJbjQRymcbjd_B7Ss',
+  '復興店':'ChIJswV-7qgDbjQRR1iV2pBuJAA',
+  '大昌店':'ChIJd_mzP9gEbjQROg5XE_ICevQ',
+  '五甲店':'ChIJA5XVF6sDbjQRzfYhR7cSDQA',
+  '明誠店':'ChIJVTmPOasFbjQRzGWKo58fcPg',
+  '瑞隆店':'ChIJ203-ScoDbjQR1TwdGsScuDI',
+  '鼎中店':'ChIJsW3ZDoIFbjQRLhQGdjXFsfk',
+  '武廟店':'ChIJ4-zUfvwFbjQRIwIsh-33gD0',
+  '一心店':'ChIJD_0T1WIDbjQRInkTw8o-IIs',
+  '左營店':'ChIJJzjUFKMFbjQRkeJBjfRnRfI',
+  '自由店':'ChIJr486sC4FbjQRDT5gYLzUt7U',
+  '大寮店':'ChIJGaGQzIobbjQRcEuVggc0xqk',
+  '華夏店':'ChIJG8IB3WAFbjQREqkwcij18VQ',
+  '建興店':'ChIJ6yEzAN0EbjQRmfAy5xuFRhM'
 });
 const ratingDigits=['','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣'];
 function staffReplyBody(reply){
@@ -717,8 +717,8 @@ function reviewNotice(row,desktop=false){
   ].join('\n');
   const sections=[heading,'💬 顧客評論\n'+(row.comment.trim()?noticeParagraphs(row.comment):'（僅留下星等）')];
   if(body)sections.push('✂️ 店家回覆\n'+noticeParagraphs(body));
-  const code=branchReviewCodes[row.branch];
-  const shareLink=code?'https://nicktsai88.github.io/Comment/r/?'+code:'';
+  const placeId=branchPlaceIds[row.branch];
+  const shareLink=placeId?'https://search.google.com/local/reviews?placeid='+placeId:'';
   // The desktop share dialog places its URL after the text; mobile and clipboard need it inline.
   if(shareLink)sections.push('🔗 '+row.branch+' Google 評論'+(desktop?'':'\n'+shareLink));
   return {text:sections.join('\n\n'),shareLink};
