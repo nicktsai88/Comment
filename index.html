@@ -695,8 +695,9 @@ function reviewNotice(row,desktop=false){
   const body=staffReplyBody(row.reply);
   const reviewedAt = /^\d{4}-\d{2}-\d{2}$/.test(row.created) ? row.created+'（時間未提供）'
     : Number.isFinite(Date.parse(row.created)) ? dateLabel(row) : '未提供';
-  const sections=[row.branch+'｜Google 評論　'+row.stars+' 星\n────────────\n🗓️ 顧客評論時間（台灣）　'+reviewedAt,
-    '── 顧客評論 ──\n'+(row.comment.trim()?noticeParagraphs(row.comment):'（僅留下星等）')];
+  const ratingEmoji=row.stars>=4?'😊':row.stars===3?'💪':'😞';
+  const sections=['🏪 '+row.branch+'｜Google 評論　'+row.stars+' 星 '+ratingEmoji+'\n────────────\n🗓️ 顧客評論時間（台灣）　'+reviewedAt,
+    '── 💬 顧客評論 ──\n'+(row.comment.trim()?noticeParagraphs(row.comment):'（僅留下星等）')];
   // Identify an App paragraph only when both store names occur on the same line.
   const appLine=/^(?=[^\n]*App Store)(?=[^\n]*Google Play)[^\n]+$/im.exec(body);
   let appStart=appLine?.index ?? -1;
@@ -707,7 +708,7 @@ function reviewNotice(row,desktop=false){
     if(lastStop>=0)appStart+=lastStop+1;
   }
   const main=appStart<0?body:body.slice(0,appStart).trim();
-  if(main)sections.push('── 店家回覆 ──\n'+noticeParagraphs(main));
+  if(main)sections.push('── ✂️ 店家回覆 ──\n'+noticeParagraphs(main));
   if(appLine){
     const end=appLine.index+appLine[0].length;
     sections.push('── App 資訊 ──\n'+noticeParagraphs(body.slice(appStart,end)));
