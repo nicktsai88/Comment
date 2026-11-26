@@ -669,12 +669,23 @@ const branchFeatures=Object.freeze({
   '建興店':'0x346e04dd003321eb:0x1346851be732f099'
 });
 function staffReplyBody(reply){
-  // Remove customer support instructions only from the staff copy of the merchant reply.
+  // Filter customer-facing instructions only in the staff copy of the merchant reply.
   const contact=/(?:lin\.ee\/9nRsU3Q|0988[\s-]*22[\s-]*55[\s-]*59|(?:公司|官方)[\s　]*(?:LINE|客服電話)|(?:用此號碼加|加入好友.{0,20}搜尋.{0,20}電話號碼)|^[\s─【】]*(?:聯絡方式|客服電話|官方\s*LINE)[\s─【】：:]*$)/i;
-  return reply.replace(/\r\n?/g,'\n').split('\n').map(line=>{
-    const sentences=line.match(/[^。！？!\n]+[。！？!]*|[。！？!]+/g)||[];
-    return sentences.filter(sentence=>!contact.test(sentence)).join('').trim();
-  }).join('\n').replace(/\n{3,}/g,'\n\n').trim();
+  const app=/\bapp\b|app\s*store|google\s*play|應用程式|apps\.apple\.com|play\.google\.com/i;
+  const feature=/班表|排班|剪髮進度|哪天.{0,12}上班|上班(?:時間|日)/;
+  const invitation=/先查|先看|可[以查看]|查詢|查看|看看|歡迎|下次|下載後|安裝後/;
+  const paragraphs=reply.replace(/\r\n?/g,'\n').split(/\n[ \t　]*\n/);
+  return paragraphs.map((paragraph,index)=>{
+    const hasApp=[paragraphs[index-1],paragraph,paragraphs[index+1]].some(text=>text && app.test(text));
+    const parts=paragraph.match(/[^。！？!\n]+[。！？!]*[ \t]*(?:\p{Extended_Pictographic}\uFE0F?)?|\n/gu)||[];
+    return parts.map(part=>{
+      if(contact.test(part))return '';
+      if(!app.test(part) && !(hasApp && feature.test(part) && invitation.test(part)))return part;
+      // Keep a service acknowledgement when a download invitation follows it after a comma.
+      const prefix=part.match(/^(.+?)[，,]\s*(?=(?:您|你)?(?:也?可以|可在|歡迎|下次|想再|若想|如果想|請在|記得))/u);
+      return prefix && !app.test(prefix[1]) && /謝謝|感謝|很高興|很開心|抱歉|我們會/.test(prefix[1])?prefix[1]+'。':'';
+    }).join('').trim();
+  }).filter(Boolean).join('\n\n');
 }
 function noticeParagraphs(text){
   return text.trim().replace(/\r\n?/g,'\n').split(/\n{2,}/u).map(paragraph=>
@@ -698,23 +709,7 @@ function reviewNotice(row,desktop=false){
   const ratingEmoji=row.stars>=4?'😊':row.stars===3?'💪':'😞';
   const sections=['🏪 '+row.branch+'｜Google 評論　'+row.stars+' 星 '+ratingEmoji+'\n────────────\n🗓️ 顧客評論時間（台灣）　'+reviewedAt,
     '── 💬 顧客評論 ──\n'+(row.comment.trim()?noticeParagraphs(row.comment):'（僅留下星等）')];
-  // Identify an App paragraph only when both store names occur on the same line.
-  const appLine=/^(?=[^\n]*App Store)(?=[^\n]*Google Play)[^\n]+$/im.exec(body);
-  let appStart=appLine?.index ?? -1;
-  if(appLine){
-    const firstStore=appLine[0].search(/App Store|Google Play/i);
-    const beforeStore=appLine[0].slice(0,firstStore);
-    const lastStop=Math.max(beforeStore.lastIndexOf('。'),beforeStore.lastIndexOf('！'),beforeStore.lastIndexOf('？'));
-    if(lastStop>=0)appStart+=lastStop+1;
-  }
-  const main=appStart<0?body:body.slice(0,appStart).trim();
-  if(main)sections.push('── ✂️ 店家回覆 ──\n'+noticeParagraphs(main));
-  if(appLine){
-    const end=appLine.index+appLine[0].length;
-    sections.push('── App 資訊 ──\n'+noticeParagraphs(body.slice(appStart,end)));
-    const rest=body.slice(end).trim();
-    if(rest)sections.push('── 回覆補充 ──\n'+noticeParagraphs(rest));
-  }
+  if(body)sections.push('── ✂️ 店家回覆 ──\n'+noticeParagraphs(body));
   const feature=branchFeatures[row.branch];
   const shareLink=feature?'https://www.google.com/maps/place//data=!4m4!3m3!1s'+feature+'!9m1!1b1':'';
   // The desktop share dialog places its URL after the text; mobile and clipboard need it inline.
