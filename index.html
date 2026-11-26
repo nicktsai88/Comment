@@ -715,8 +715,8 @@ function reviewNotice(row,desktop=false){
     '────────────',
     '🗓️ 顧客評論時間　'+reviewedAt
   ].join('\n');
-  const sections=[heading,'── 💬 顧客評論 ──\n'+(row.comment.trim()?noticeParagraphs(row.comment):'（僅留下星等）')];
-  if(body)sections.push('── ✂️ 店家回覆 ──\n'+noticeParagraphs(body));
+  const sections=[heading,'💬 顧客評論\n'+(row.comment.trim()?noticeParagraphs(row.comment):'（僅留下星等）')];
+  if(body)sections.push('✂️ 店家回覆\n'+noticeParagraphs(body));
   const code=branchReviewCodes[row.branch];
   const shareLink=code?'https://nicktsai88.github.io/Comment/r/?'+code:'';
   // The desktop share dialog places its URL after the text; mobile and clipboard need it inline.
