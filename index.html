@@ -700,11 +700,20 @@ function staffReplyBody(reply){
   const app=/\bapp\b|app\s*store|google\s*play|應用程式|apps\.apple\.com|play\.google\.com/i;
   const feature=/班表|排班|剪髮進度|哪天.{0,12}上班|上班(?:時間|日)/;
   const invitation=/先查|先看|可[以查看]|查詢|查看|看看|歡迎|下次|下載後|安裝後/;
+  const downloadIntro=/(?:(?:您|你)?也?(?:可以|可)|歡迎(?:您|你)?|記得|請)\s*(?:前往|使用|透過|打開|開啟|到|在|下載|安裝)?\s*(?:iPhone|Android|App(?:\s*Store)?\b|Google\s*Play|「囍事快剪」\s*App)/iu;
   const paragraphs=reply.replace(/\r\n?/g,'\n').split(/\n[ \t　]*\n/);
   return paragraphs.map((paragraph,index)=>{
     const hasApp=[paragraphs[index-1],paragraph,paragraphs[index+1]].some(text=>text && app.test(text));
     const parts=paragraph.match(/[^。！？!\n]+[。！？!]*[ \t]*(?:\p{Extended_Pictographic}\uFE0F?)?|\n/gu)||[];
     return parts.map(part=>{
+      // An invitation may follow the acknowledgement directly, even after just an emoji.
+      const intro=part.search(downloadIntro);
+      if(intro>=0 && app.test(part.slice(intro))){
+        const service=part.slice(0,intro).trimEnd();
+        if(service && !app.test(service) && !contact.test(service) && !(feature.test(service) && invitation.test(service))){
+          return service.replace(/[，,；;]$/u,'。');
+        }
+      }
       if(contact.test(part))return '';
       if(!app.test(part) && !(hasApp && feature.test(part) && invitation.test(part)))return part;
       // Keep a service acknowledgement when a download invitation follows it after a comma.
