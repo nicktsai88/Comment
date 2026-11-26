@@ -689,7 +689,9 @@ function reviewNotice(row,desktop=false){
   const reply=row.reply.replace(/\r\n?/g,'\n').trim();
   const hasContact=standardContact.test(reply);
   const body=reply.replace(standardContact,'').trim();
-  const sections=[row.branch+'｜Google 評論　'+row.stars+' 星',
+  const reviewedAt = /^\d{4}-\d{2}-\d{2}$/.test(row.created) ? row.created+'（時間未提供）'
+    : Number.isFinite(Date.parse(row.created)) ? dateLabel(row) : '未提供';
+  const sections=[row.branch+'｜Google 評論　'+row.stars+' 星\n🗓️ 顧客評論時間（台灣）　'+reviewedAt,
     '── 顧客評論 ──\n'+(row.comment.trim()?noticeParagraphs(row.comment):'（僅留下星等）')];
   // Identify an App paragraph only when both store names occur on the same line.
   const appLine=/^(?=[^\n]*App Store)(?=[^\n]*Google Play)[^\n]+$/im.exec(body);
