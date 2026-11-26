@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>囍事快剪｜分店 Google 評論</title>
+<style>
+  body{margin:3rem auto;padding:0 1.25rem;max-width:32rem;font:1.125rem/1.6 system-ui,sans-serif;color:#35242a}
+  a{color:#a01939}
+</style>
+</head>
+<body>
+<p id="status">正在開啟分店 Google 評論…</p>
+<a id="destination" hidden>開啟 Google 評論</a>
+<noscript>請開啟 JavaScript 以查看分店評論。</noscript>
+<script>
+// Keep these codes assigned to the same branches when adding locations.
+const branches={
+  a:['內惟店','0x346e044be376eecd:0x69f72c5a4ba57150'],
+  b:['德惠店','0x346e0fa6399ba177:0x19c69bee1bdba173'],
+  c:['小港店','0x346e1d4cc4f36b09:0x3c12a74d3fa3338'],
+  d:['大社店','0x346e102b9b8ddb2d:0xe545f95508cd1e87'],
+  e:['斗六一店','0x346ec9dfcbcae2c7:0x9c03c75ca609060e'],
+  f:['十全店','0x346e05a9e7de8ff9:0xae6f09536b806b90'],
+  g:['陽明店','0x346e04d2eb54de6b:0x3cb43a936f76a904'],
+  h:['福山店','0x346e05f08225ac4f:0xe18c6d8cd3a64d35'],
+  i:['光遠店','0x346e1b38a280e26b:0x408e89da57af096b'],
+  j:['後昌店','0x346e0f79c5372229:0xf11cbcf130ae25e1'],
+  k:['虎尾店','0x346eb0a9e1c9e6d9:0x681251f1805f7ede'],
+  l:['華榮店','0x346e05a9c9c7a0d5:0xf53e1c443288f63a'],
+  m:['斗六二店','0x346ec98780e9c319:0x2bedc1df8d1b67ca'],
+  n:['復興店','0x346e03a8ee7e05b3:0x246e90da955847'],
+  o:['大昌店','0x346e04d83fb3f977:0xf47a02f213570e3a'],
+  p:['五甲店','0x346e03ab17d59503:0xd12b74721f6cd'],
+  q:['明誠店','0x346e05ab398f3955:0xf8701f9fa38a65cc'],
+  r:['瑞隆店','0x346e03ca49fe4ddb:0x32b89cc41a1d3cd5'],
+  s:['鼎中店','0x346e05820ed96db1:0xf9b1c5357606142e'],
+  t:['武廟店','0x346e05fc7ed4ece3:0x3d80f7ed872c0223'],
+  u:['一心店','0x346e0362d513fd0f:0x8b203ecac3137922'],
+  v:['左營店','0x346e05a314d43827:0xf24567f48d41e291'],
+  w:['自由店','0x346e052eb03a8faf:0xb5b7d4bc60603e0d'],
+  x:['大寮店','0x346e1b8acc90a119:0xa9c6340782954b70'],
+  y:['華夏店','0x346e0560dd01c21b:0x54f1f5287230a912'],
+  z:['建興店','0x346e04dd003321eb:0x1346851be732f099']
+};
+const code=location.search.slice(1);
+const statusText=document.getElementById('status');
+if(Object.hasOwn(branches,code)){
+  const [branch,feature]=branches[code];
+  const url='https://www.google.com/maps/place//data=!4m4!3m3!1s'+feature+'!9m1!1b1';
+  const link=document.getElementById('destination');
+  link.href=url;
+  link.textContent='開啟'+branch+' Google 評論';
+  link.hidden=false;
+  statusText.textContent='正在開啟'+branch+'的 Google 評論…';
+  location.replace(url);
+}else{
+  statusText.textContent='找不到這間分店，請點選 LINE 訊息底部的完整連結。';
+}
+</script>
+</body>
+</html>
