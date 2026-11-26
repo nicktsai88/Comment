@@ -639,37 +639,43 @@ async function mutate(mode) {
 function canShareReview(row){
   return Boolean(row && usedState(row)==='posted' && row.reply.trim() && !busy.has(row.id));
 }
-// Public Maps CIDs from the Business Profile listings. Keep them as strings.
-const branchMapIds=Object.freeze({
-  '斗六一店':'11242048295583417870',
-  '後昌店':'17373969206578390497',
-  '小港店':'270544133879903032',
-  '陽明店':'4374185542988245252',
-  '內惟店':'7635620459557777744',
-  '光遠店':'4651807035987265899',
-  '十全店':'12569275338904857488',
-  '大社店':'16520884951693729415',
-  '德惠店':'1857343343308808563',
-  '福山店':'16252485606887017781',
-  '虎尾店':'7499146427208007390',
-  '華榮店':'17671593067079595578',
-  '瑞隆店':'3654843463676804309',
-  '大昌店':'17616396131142929978',
-  '斗六二店':'3165399279000577994',
-  '五甲店':'3679753078961869',
-  '鼎中店':'17992378819725890606',
-  '復興店':'10254667583150151',
-  '明誠店':'17901843289301738956',
-  '武廟店':'4431814632879686179',
-  '一心店':'10025081811103873314',
-  '左營店':'17457473830611182225',
-  '大寮店':'12233522644658768752',
-  '華夏店':'6120942922636503314',
-  '自由店':'13094168347138866701',
-  '建興店':'1388943889979863193'
+// Google Maps feature IDs matched to the 26 Business Profile locations.
+const branchFeatures=Object.freeze({
+  '內惟店':'0x346e044be376eecd:0x69f72c5a4ba57150',
+  '德惠店':'0x346e0fa6399ba177:0x19c69bee1bdba173',
+  '小港店':'0x346e1d4cc4f36b09:0x3c12a74d3fa3338',
+  '大社店':'0x346e102b9b8ddb2d:0xe545f95508cd1e87',
+  '斗六一店':'0x346ec9dfcbcae2c7:0x9c03c75ca609060e',
+  '十全店':'0x346e05a9e7de8ff9:0xae6f09536b806b90',
+  '陽明店':'0x346e04d2eb54de6b:0x3cb43a936f76a904',
+  '福山店':'0x346e05f08225ac4f:0xe18c6d8cd3a64d35',
+  '光遠店':'0x346e1b38a280e26b:0x408e89da57af096b',
+  '後昌店':'0x346e0f79c5372229:0xf11cbcf130ae25e1',
+  '虎尾店':'0x346eb0a9e1c9e6d9:0x681251f1805f7ede',
+  '華榮店':'0x346e05a9c9c7a0d5:0xf53e1c443288f63a',
+  '斗六二店':'0x346ec98780e9c319:0x2bedc1df8d1b67ca',
+  '復興店':'0x346e03a8ee7e05b3:0x246e90da955847',
+  '大昌店':'0x346e04d83fb3f977:0xf47a02f213570e3a',
+  '五甲店':'0x346e03ab17d59503:0xd12b74721f6cd',
+  '明誠店':'0x346e05ab398f3955:0xf8701f9fa38a65cc',
+  '瑞隆店':'0x346e03ca49fe4ddb:0x32b89cc41a1d3cd5',
+  '鼎中店':'0x346e05820ed96db1:0xf9b1c5357606142e',
+  '武廟店':'0x346e05fc7ed4ece3:0x3d80f7ed872c0223',
+  '一心店':'0x346e0362d513fd0f:0x8b203ecac3137922',
+  '左營店':'0x346e05a314d43827:0xf24567f48d41e291',
+  '自由店':'0x346e052eb03a8faf:0xb5b7d4bc60603e0d',
+  '大寮店':'0x346e1b8acc90a119:0xa9c6340782954b70',
+  '華夏店':'0x346e0560dd01c21b:0x54f1f5287230a912',
+  '建興店':'0x346e04dd003321eb:0x1346851be732f099'
 });
-const officialLineURL='https://lin.ee/9nRsU3Q';
-const standardContact=/^囍事快剪官方[ \t　]*LINE[ \t　]*https:\/\/lin\.ee\/9nRsU3Q[ \t　]*\n也可在[ \t　]*LINE[ \t　]*選「加入好友」[ \t　]*→[ \t　]*「搜尋」[ \t　]*→[ \t　]*「電話號碼」，輸入[ \t　]*0988-225559。[ \t　]*\n公司客服電話[ \t　]*0988-225559[ \t　]*$/m;
+function staffReplyBody(reply){
+  // Remove customer support instructions only from the staff copy of the merchant reply.
+  const contact=/(?:lin\.ee\/9nRsU3Q|0988[\s-]*22[\s-]*55[\s-]*59|(?:公司|官方)[\s　]*(?:LINE|客服電話)|(?:用此號碼加|加入好友.{0,20}搜尋.{0,20}電話號碼)|^[\s─【】]*(?:聯絡方式|客服電話|官方\s*LINE)[\s─【】：:]*$)/i;
+  return reply.replace(/\r\n?/g,'\n').split('\n').map(line=>{
+    const sentences=line.match(/[^。！？!\n]+[。！？!]*|[。！？!]+/g)||[];
+    return sentences.filter(sentence=>!contact.test(sentence)).join('').trim();
+  }).join('\n').replace(/\n{3,}/g,'\n\n').trim();
+}
 function noticeParagraphs(text){
   return text.trim().replace(/\r\n?/g,'\n').split(/\n{2,}/u).map(paragraph=>
     paragraph.split('\n').map(line=>{
@@ -686,12 +692,10 @@ function noticeParagraphs(text){
   ).join('\n\n');
 }
 function reviewNotice(row,desktop=false){
-  const reply=row.reply.replace(/\r\n?/g,'\n').trim();
-  const hasContact=standardContact.test(reply);
-  const body=reply.replace(standardContact,'').trim();
+  const body=staffReplyBody(row.reply);
   const reviewedAt = /^\d{4}-\d{2}-\d{2}$/.test(row.created) ? row.created+'（時間未提供）'
     : Number.isFinite(Date.parse(row.created)) ? dateLabel(row) : '未提供';
-  const sections=[row.branch+'｜Google 評論　'+row.stars+' 星\n🗓️ 顧客評論時間（台灣）　'+reviewedAt,
+  const sections=[row.branch+'｜Google 評論　'+row.stars+' 星\n────────────\n🗓️ 顧客評論時間（台灣）　'+reviewedAt,
     '── 顧客評論 ──\n'+(row.comment.trim()?noticeParagraphs(row.comment):'（僅留下星等）')];
   // Identify an App paragraph only when both store names occur on the same line.
   const appLine=/^(?=[^\n]*App Store)(?=[^\n]*Google Play)[^\n]+$/im.exec(body);
@@ -703,22 +707,17 @@ function reviewNotice(row,desktop=false){
     if(lastStop>=0)appStart+=lastStop+1;
   }
   const main=appStart<0?body:body.slice(0,appStart).trim();
-  sections.push('── 店家回覆 ──'+(main?'\n'+noticeParagraphs(main):''));
+  if(main)sections.push('── 店家回覆 ──\n'+noticeParagraphs(main));
   if(appLine){
     const end=appLine.index+appLine[0].length;
     sections.push('── App 資訊 ──\n'+noticeParagraphs(body.slice(appStart,end)));
     const rest=body.slice(end).trim();
     if(rest)sections.push('── 回覆補充 ──\n'+noticeParagraphs(rest));
   }
-  let shareLink='';
-  if(hasContact){
-    // On desktop LINE appends the supplied link. Give it the existing contact link once.
-    sections.push('── 聯絡方式 ──\n客服電話　0988-225559\n用此號碼加 LINE 好友\n「加入好友」→「搜尋」→「電話號碼」\n官方 LINE'+(desktop?'':'　'+officialLineURL));
-    if(desktop)shareLink=officialLineURL;
-  }else if(desktop && Object.hasOwn(branchMapIds,row.branch)){
-    shareLink='https://maps.google.com/maps?cid='+branchMapIds[row.branch];
-    sections.push('分店地圖');
-  }
+  const feature=branchFeatures[row.branch];
+  const shareLink=feature?'https://www.google.com/maps/place//data=!4m4!3m3!1s'+feature+'!9m1!1b1':'';
+  // The desktop share dialog places its URL after the text; mobile and clipboard need it inline.
+  if(shareLink)sections.push('🔗 '+row.branch+' Google 評論'+(desktop?'':'\n'+shareLink));
   return {text:sections.join('\n\n'),shareLink};
 }
 function personalShareURL(row){
