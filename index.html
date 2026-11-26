@@ -639,35 +639,36 @@ async function mutate(mode) {
 function canShareReview(row){
   return Boolean(row && usedState(row)==='posted' && row.reply.trim() && !busy.has(row.id));
 }
-// Google Maps feature IDs matched to the 26 Business Profile locations.
-const branchFeatures=Object.freeze({
-  '內惟店':'0x346e044be376eecd:0x69f72c5a4ba57150',
-  '德惠店':'0x346e0fa6399ba177:0x19c69bee1bdba173',
-  '小港店':'0x346e1d4cc4f36b09:0x3c12a74d3fa3338',
-  '大社店':'0x346e102b9b8ddb2d:0xe545f95508cd1e87',
-  '斗六一店':'0x346ec9dfcbcae2c7:0x9c03c75ca609060e',
-  '十全店':'0x346e05a9e7de8ff9:0xae6f09536b806b90',
-  '陽明店':'0x346e04d2eb54de6b:0x3cb43a936f76a904',
-  '福山店':'0x346e05f08225ac4f:0xe18c6d8cd3a64d35',
-  '光遠店':'0x346e1b38a280e26b:0x408e89da57af096b',
-  '後昌店':'0x346e0f79c5372229:0xf11cbcf130ae25e1',
-  '虎尾店':'0x346eb0a9e1c9e6d9:0x681251f1805f7ede',
-  '華榮店':'0x346e05a9c9c7a0d5:0xf53e1c443288f63a',
-  '斗六二店':'0x346ec98780e9c319:0x2bedc1df8d1b67ca',
-  '復興店':'0x346e03a8ee7e05b3:0x246e90da955847',
-  '大昌店':'0x346e04d83fb3f977:0xf47a02f213570e3a',
-  '五甲店':'0x346e03ab17d59503:0xd12b74721f6cd',
-  '明誠店':'0x346e05ab398f3955:0xf8701f9fa38a65cc',
-  '瑞隆店':'0x346e03ca49fe4ddb:0x32b89cc41a1d3cd5',
-  '鼎中店':'0x346e05820ed96db1:0xf9b1c5357606142e',
-  '武廟店':'0x346e05fc7ed4ece3:0x3d80f7ed872c0223',
-  '一心店':'0x346e0362d513fd0f:0x8b203ecac3137922',
-  '左營店':'0x346e05a314d43827:0xf24567f48d41e291',
-  '自由店':'0x346e052eb03a8faf:0xb5b7d4bc60603e0d',
-  '大寮店':'0x346e1b8acc90a119:0xa9c6340782954b70',
-  '華夏店':'0x346e0560dd01c21b:0x54f1f5287230a912',
-  '建興店':'0x346e04dd003321eb:0x1346851be732f099'
+// These published review links use permanent, case-sensitive branch codes.
+const branchReviewCodes=Object.freeze({
+  '內惟店':'a',
+  '德惠店':'b',
+  '小港店':'c',
+  '大社店':'d',
+  '斗六一店':'e',
+  '十全店':'f',
+  '陽明店':'g',
+  '福山店':'h',
+  '光遠店':'i',
+  '後昌店':'j',
+  '虎尾店':'k',
+  '華榮店':'l',
+  '斗六二店':'m',
+  '復興店':'n',
+  '大昌店':'o',
+  '五甲店':'p',
+  '明誠店':'q',
+  '瑞隆店':'r',
+  '鼎中店':'s',
+  '武廟店':'t',
+  '一心店':'u',
+  '左營店':'v',
+  '自由店':'w',
+  '大寮店':'x',
+  '華夏店':'y',
+  '建興店':'z'
 });
+const ratingDigits=['','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣'];
 function staffReplyBody(reply){
   // Filter customer-facing instructions only in the staff copy of the merchant reply.
   const contact=/(?:lin\.ee\/9nRsU3Q|0988[\s-]*22[\s-]*55[\s-]*59|(?:公司|官方)[\s　]*(?:LINE|客服電話)|(?:用此號碼加|加入好友.{0,20}搜尋.{0,20}電話號碼)|^[\s─【】]*(?:聯絡方式|客服電話|官方\s*LINE)[\s─【】：:]*$)/i;
@@ -706,12 +707,18 @@ function reviewNotice(row,desktop=false){
   const body=staffReplyBody(row.reply);
   const reviewedAt = /^\d{4}-\d{2}-\d{2}$/.test(row.created) ? row.created+'（時間未提供）'
     : Number.isFinite(Date.parse(row.created)) ? dateLabel(row) : '未提供';
-  const ratingEmoji=row.stars>=4?'😊':row.stars===3?'💪':'😞';
-  const sections=['🏪 '+row.branch+'｜Google 評論　'+row.stars+' 星 '+ratingEmoji+'\n────────────\n🗓️ 顧客評論時間（台灣）　'+reviewedAt,
-    '── 💬 顧客評論 ──\n'+(row.comment.trim()?noticeParagraphs(row.comment):'（僅留下星等）')];
+  const stars=Number(row.stars);
+  const ratingEmoji=stars>=4?'😊':stars===3?'💪':'😞';
+  const heading=[
+    '🏪 '+row.branch,
+    'Google 評論 '+ratingDigits[stars]+' 星 '+ratingEmoji,
+    '────────────',
+    '🗓️ 顧客評論時間　'+reviewedAt
+  ].join('\n');
+  const sections=[heading,'── 💬 顧客評論 ──\n'+(row.comment.trim()?noticeParagraphs(row.comment):'（僅留下星等）')];
   if(body)sections.push('── ✂️ 店家回覆 ──\n'+noticeParagraphs(body));
-  const feature=branchFeatures[row.branch];
-  const shareLink=feature?'https://www.google.com/maps/place//data=!4m4!3m3!1s'+feature+'!9m1!1b1':'';
+  const code=branchReviewCodes[row.branch];
+  const shareLink=code?'https://nicktsai88.github.io/Comment/r/?'+code:'';
   // The desktop share dialog places its URL after the text; mobile and clipboard need it inline.
   if(shareLink)sections.push('🔗 '+row.branch+' Google 評論'+(desktop?'':'\n'+shareLink));
   return {text:sections.join('\n\n'),shareLink};
