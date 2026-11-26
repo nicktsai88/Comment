@@ -201,6 +201,7 @@ button:hover:enabled {border-color:#b77991}
 <main class="shell app-main" id="app" hidden><div class="toolbar"><span class="salon-stamp" aria-hidden="true">✂️</span><div><h1>Google 評論管理室</h1><p class="meta" id="summary" aria-live="polite"></p></div><button id="refresh" type="button" class="secondary">重新整理</button></div>
 <div class="alert app-status" id="global-status" role="status"></div><div class="notice app-status" id="sync-warning" role="status" hidden></div><div class="buttons" id="relay-controls" hidden><button id="relay-open" type="button" class="secondary">連接管理後台</button><a class="fallback" id="app-fallback" hidden>直接開啟私有管理後台</a></div>
 <section id="connect-panel" class="connect" hidden><h2>Google 商家連線</h2><p id="connect-description"></p><button type="button" class="primary" id="authorize">連結 Windsor.ai</button><a class="fallback" id="oauth-link" target="_blank" rel="noopener noreferrer" hidden>前往 Windsor.ai 完成授權</a><details id="alternative-key"><summary>改用 API 金鑰</summary><form id="connect-form" class="field-group"><label>Windsor.ai API 金鑰<input id="key" type="password" class="field" autocomplete="off" spellcheck="false" required></label><button id="connect-save" type="submit" class="secondary">儲存連線</button></form></details><div class="alert" id="connect-status" role="status"></div></section>
+<details class="notice" id="review-notices" hidden open><summary id="notice-count"></summary><ul id="notice-items"></ul></details>
 <nav id="tabs" class="tabs" aria-label="回覆狀態"></nav>
 <div class="workspace"><section class="panel" id="inbox"><div class="list-head"><h2><span class="section-icon" aria-hidden="true">📋</span>評論清單</h2><label class="search">搜尋評論<input id="search" class="field" type="search" placeholder="輸入顧客、分店或留言關鍵字"></label><div class="filter-pair"><label>分店<select class="control" id="branch"></select></label><label>星等<select class="control" id="stars"><option value="">全部星等</option><option value="1">1 星</option><option value="2">2 星</option><option value="3">3 星</option><option value="4">4 星</option><option value="5">5 星</option></select></label></div></div><div class="list" id="list" aria-label="篩選結果"></div></section>
 <section class="panel reader" id="reader" aria-labelledby="reader-heading"><div id="no-review" class="empty">請從清單選取一則評論。</div><div id="detail" hidden><header class="detail-head"><div class="detail-top"><span id="detail-stars" class="pill"></span><span id="detail-state" class="pill"></span><span id="detail-date" class="meta"></span><button id="back" class="mobile-back secondary" type="button">回到清單</button></div><h2 id="reader-heading"></h2><p id="reviewer" class="meta"></p></header><div class="body-detail"><section class="original"><h3><span class="section-icon" aria-hidden="true">💬</span>顧客原文</h3><div class="message" id="comment"></div></section>
@@ -342,6 +343,7 @@ function loginScreen(message='') {
   $('login-view').hidden=false;$('app').hidden=true;$('top-actions').hidden=true;
   $('connect-panel').hidden=true;$('key').value='';$('draft').value='';$('password').value='';
   $('list').replaceChildren(); $('detail').hidden=true;
+  $('review-notices').hidden=true;$('notice-items').replaceChildren();
   backendFallback(false);$('oauth-link').hidden=true;
   setMessage($('login-status'),message,Boolean(message));
   setMessage($('global-status'));setMessage($('connect-status'));$('sync-warning').hidden=true;$('sync-warning').textContent='';
@@ -503,6 +505,11 @@ async function load({quiet=false}={}){
     const rows=data.reviews.map(normalized);if(rows.some(r=>!r))throw new ApiError('部分評論資料不完整，請重新整理。');
     const ids=new Set(rows.map(r=>r.id));for(const id of reviews.keys()){if(!ids.has(id)){reviews.delete(id);drafts.delete(id);issues.delete(id);unresolved.delete(id);}}
     rows.forEach(register);connected=data.connected===true;
+    const notices=data.notices||[];
+    $('review-notices').hidden=!notices.length;
+    $('notice-count').textContent='新評論通知 · '+notices.length+' 則待同步';
+    $('notice-items').replaceChildren(...notices.map(n=>tag(
+      [n.branch,n.stars?n.stars+' 星':'星等待確認',n.name,'通知時間 '+stampFormat.format(Date.parse(n.received)),n.excerpt?'通知摘要：'+n.excerpt:'等待 Google 評論全文'].filter(Boolean).join(' · '),'','li')));
     $('summary').textContent='共 '+reviews.size+' 則評論 · '+new Set(rows.map(r=>r.branch).filter(Boolean)).size+' 間分店有紀錄';
     if(!connected && !quiet)$('connect-panel').hidden=false;
     setConnections();filters();renderList();
@@ -779,6 +786,12 @@ $('mark-shared').onchange=async event=>{
 };
 $('save').onclick=()=>mutate('save');$('publish').onclick=()=>mutate('publish');$('recheck').onclick=()=>mutate('recheck');
 window.addEventListener('beforeunload',e=>{if(drafts.size){e.preventDefault();e.returnValue='';}});
+function refreshWhenIdle(){
+  if(token && !document.hidden && !$('refresh').disabled && !busy.size && !drafts.size && !$('connect-panel').matches(':focus-within') &&
+     !['INPUT','SELECT','TEXTAREA','BUTTON'].includes(document.activeElement?.tagName))load({quiet:true});
+}
+setInterval(refreshWhenIdle,60000);
+document.addEventListener('visibilitychange',refreshWhenIdle);
 if(token)enter();else{backendFallback(false);$('username').focus();}
 </script>
 </body></html>
